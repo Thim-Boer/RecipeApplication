@@ -1,4 +1,4 @@
-package recipeapplication.application.Models;
+package recipeapplication.application.models;
 
 import java.sql.Date;
 import jakarta.persistence.Entity;

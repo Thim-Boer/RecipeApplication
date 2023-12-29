@@ -1,12 +1,12 @@
-package recipeapplication.application.Services;
+package recipeapplication.application.services;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 
-import recipeapplication.application.Models.Recipe;
-import recipeapplication.application.Models.UpdateRecipeModel;
+import recipeapplication.application.models.Recipe;
+import recipeapplication.application.models.UpdateRecipeModel;
 
 public interface IRecipeService {
 

@@ -1,16 +1,16 @@
-package recipeapplication.application.Services;
+package recipeapplication.application.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import recipeapplication.application.Dto.AuthenticationResponse;
-import recipeapplication.application.Dto.SignInRequest;
-import recipeapplication.application.Dto.SignUpRequest;
-import recipeapplication.application.Models.Token;
-import recipeapplication.application.Models.TokenType;
-import recipeapplication.application.Models.User;
-import recipeapplication.application.Repository.TokenRepository;
+import recipeapplication.application.dto.AuthenticationResponse;
+import recipeapplication.application.dto.SignInRequest;
+import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.models.Token;
+import recipeapplication.application.models.TokenType;
+import recipeapplication.application.models.User;
+import recipeapplication.application.repository.TokenRepository;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ import java.io.IOException;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-  private final recipeapplication.application.Repository.UserRepository repository;
+  private final recipeapplication.application.repository.UserRepository repository;
   private final TokenRepository tokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final TokenService jwtService;

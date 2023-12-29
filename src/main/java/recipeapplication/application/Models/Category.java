@@ -1,4 +1,4 @@
-package recipeapplication.application.Models;
+package recipeapplication.application.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 @Entity

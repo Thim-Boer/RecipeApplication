@@ -1,13 +1,14 @@
-package recipeapplication.application.Services;
+package recipeapplication.application.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
-import recipeapplication.application.Models.Recipe;
-import recipeapplication.application.Models.UpdateRecipeModel;
-import recipeapplication.application.Repository.RecipeRepository;
+
+import recipeapplication.application.models.Recipe;
+import recipeapplication.application.models.UpdateRecipeModel;
+import recipeapplication.application.repository.RecipeRepository;
 
 @Service
 public class RecipeService implements IRecipeService {

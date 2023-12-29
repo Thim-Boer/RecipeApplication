@@ -1,11 +1,11 @@
-package recipeapplication.application.Repository;
+package recipeapplication.application.repository;
 
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import recipeapplication.application.Models.Token;
+import recipeapplication.application.models.Token;
 
 public interface TokenRepository extends JpaRepository<Token, Integer> {
 

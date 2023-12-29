@@ -1,4 +1,4 @@
-package recipeapplication.application.Services;
+package recipeapplication.application.services;
 
 import java.security.Key;
 import java.util.Date;

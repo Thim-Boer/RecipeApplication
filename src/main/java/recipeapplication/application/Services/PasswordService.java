@@ -1,4 +1,4 @@
-package recipeapplication.application.Services;
+package recipeapplication.application.services;
 
 import java.security.Principal;
 
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 
 import lombok.RequiredArgsConstructor;
-import recipeapplication.application.Models.ChangePasswordRequest;
-import recipeapplication.application.Models.User;
-import recipeapplication.application.Repository.UserRepository;
+import recipeapplication.application.models.ChangePasswordRequest;
+import recipeapplication.application.models.User;
+import recipeapplication.application.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor

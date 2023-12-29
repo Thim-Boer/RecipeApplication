@@ -1,4 +1,4 @@
-package recipeapplication.application.Controllers;
+package recipeapplication.application.controllers;
 
 import jakarta.annotation.PostConstruct;
 
@@ -7,9 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import recipeapplication.application.Models.Recipe;
-import recipeapplication.application.Models.UpdateRecipeModel;
-import recipeapplication.application.Services.IRecipeService;
+
+import recipeapplication.application.models.Recipe;
+import recipeapplication.application.models.UpdateRecipeModel;
+import recipeapplication.application.services.IRecipeService;
 
 import java.util.ArrayList;
 import java.util.List;
