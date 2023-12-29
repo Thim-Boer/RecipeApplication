@@ -33,8 +33,6 @@ public class Token {
 
   public boolean revoked;
 
-  // public String issuer;
-
   public boolean expired;
 
   @ManyToOne(fetch = FetchType.LAZY)
