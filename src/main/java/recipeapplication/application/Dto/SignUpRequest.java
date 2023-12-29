@@ -1,10 +1,10 @@
-package recipeapplication.application.Dto;
+package recipeapplication.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import recipeapplication.application.Models.Role;
+import recipeapplication.application.models.Role;
 
 @Data
 @Builder

@@ -17,8 +17,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import recipeapplication.application.Repository.TokenRepository;
-import recipeapplication.application.Services.TokenService;
+import recipeapplication.application.repository.TokenRepository;
+import recipeapplication.application.services.TokenService;
 
 @Component
 @RequiredArgsConstructor

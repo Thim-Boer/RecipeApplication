@@ -1,4 +1,4 @@
-package recipeapplication.application.Controllers;
+package recipeapplication.application.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -6,13 +6,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
-import recipeapplication.application.Dto.SignUpRequest;
-import recipeapplication.application.Services.AuthenticationService;
-import recipeapplication.application.Dto.AuthenticationResponse;
-import recipeapplication.application.Dto.SignInRequest;
-
-
+import recipeapplication.application.dto.AuthenticationResponse;
+import recipeapplication.application.dto.SignInRequest;
+import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.services.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/auth")

@@ -1,4 +1,4 @@
-package recipeapplication.application.Dto;
+package recipeapplication.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

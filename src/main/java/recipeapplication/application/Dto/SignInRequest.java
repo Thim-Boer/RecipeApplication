@@ -1,4 +1,4 @@
-package recipeapplication.application.Dto;
+package recipeapplication.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

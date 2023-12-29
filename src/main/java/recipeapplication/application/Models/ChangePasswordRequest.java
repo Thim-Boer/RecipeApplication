@@ -1,4 +1,4 @@
-package recipeapplication.application.Models;
+package recipeapplication.application.models;
 
 import lombok.Builder;
 import lombok.Getter;
