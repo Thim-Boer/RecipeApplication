@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import recipeapplication.application.Dto.AuthenticationResponse;
 import recipeapplication.application.Dto.SignInRequest;
 import recipeapplication.application.Dto.SignUpRequest;
-import recipeapplication.application.Models.Role;
 import recipeapplication.application.Models.Token;
 import recipeapplication.application.Models.TokenType;
 import recipeapplication.application.Models.User;
@@ -20,8 +19,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-// import static recipeapplication.application.Models.Role.ADMIN;
-
 import java.io.IOException;
 
 @Service
@@ -32,7 +29,6 @@ public class AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final TokenService jwtService;
   private final AuthenticationManager authenticationManager;
-  //inoticationcollector
   public ResponseEntity<?> register(SignUpRequest request) {
     var user = User.builder()
         .firstname(request.getFirstname())
