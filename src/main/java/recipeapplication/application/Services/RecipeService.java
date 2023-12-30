@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 import recipeapplication.application.models.Recipe;
-import recipeapplication.application.models.Role;
 import recipeapplication.application.models.UpdateRecipeModel;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.RecipeRepository;
@@ -27,7 +26,7 @@ public class RecipeService implements IRecipeService {
         var userId = user.getId();
         var userRole = user.getRole().name();
         if(!userId.equals(recipe.userId)) {
-            if(userRole.equals(Role.ADMIN)) {
+            if(userRole.equals("ADMIN")) {
                 return true;
             } else {
                 return false;

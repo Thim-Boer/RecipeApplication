@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("/api/recipes")
 @RestController
 public class RecipeController {
-    private final IRecipeService recipeService;
+    private IRecipeService recipeService;
     
     @Autowired
     public RecipeController(IRecipeService recipeService) {
