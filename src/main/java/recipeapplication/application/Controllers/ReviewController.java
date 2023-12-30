@@ -37,8 +37,9 @@ private IReviewService reviewService;
         }
         return reviewService.updateReview(updateModel);
     }
-
+    
     @DeleteMapping("/deleteReview")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
     public ResponseEntity<?> deleteReview(@RequestBody Review review) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;

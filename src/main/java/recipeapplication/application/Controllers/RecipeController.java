@@ -57,8 +57,9 @@ public class RecipeController {
         }
         return ResponseEntity.ok().body(result);
     }
-
+    
     @DeleteMapping("/deleteRecipe")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
     public ResponseEntity<?> deleteRecipe(@RequestBody Recipe recipe) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;
