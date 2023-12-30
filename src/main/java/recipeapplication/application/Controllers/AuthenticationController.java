@@ -20,7 +20,6 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
-        
         var register = ResponseEntity.ok(authenticationService.register(request));
         if (register.getBody().getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(register.getBody());
@@ -28,7 +27,7 @@ public class AuthenticationController {
         return ResponseEntity.unprocessableEntity().build();
     }
     
-    @PostMapping("/signin")
+    @PostMapping("/signin") 
     public  ResponseEntity<AuthenticationResponse> signin(@RequestBody SignInRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }

@@ -7,13 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 import recipeapplication.application.models.Recipe;
+import recipeapplication.application.models.Role;
 import recipeapplication.application.models.UpdateRecipeModel;
+import recipeapplication.application.models.User;
 import recipeapplication.application.repository.RecipeRepository;
 
 @Service
 public class RecipeService implements IRecipeService {
 
-    private RecipeRepository recipeRepository;
+    private final RecipeRepository recipeRepository;
 
     @Autowired
     public RecipeService(RecipeRepository recipeRepository) {
@@ -21,7 +23,21 @@ public class RecipeService implements IRecipeService {
     }
     
     @Override
-    public void insertEntity(Recipe recipe) {
+    public boolean checkIfUserIsAuthorized(User user, Recipe recipe) {
+        var userId = user.getId();
+        var userRole = user.getRole().name();
+        if(!userId.equals(recipe.userId)) {
+            if(userRole.equals(Role.ADMIN)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void insertRecipe(Recipe recipe) {
         recipeRepository.save(recipe);
     }
 
@@ -46,6 +62,16 @@ public class RecipeService implements IRecipeService {
             return ResponseEntity.notFound().build();
         }
         recipeRepository.save(recipes.getUpdated());
+        return ResponseEntity.ok().build();
+    }
+    
+    @Override
+    public ResponseEntity<?> deleteRecipe(Recipe recipe) {
+        var foundRecipe = recipeRepository.findById(recipe.id);
+        if(!foundRecipe.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        recipeRepository.delete(recipe);
         return ResponseEntity.ok().build();
     }
 }

@@ -7,14 +7,18 @@ import org.springframework.http.ResponseEntity;
 
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.UpdateRecipeModel;
+import recipeapplication.application.models.User;
 
 public interface IRecipeService {
+    boolean checkIfUserIsAuthorized(User user, Recipe recipe);
 
-    void insertEntity(Recipe recipe);
+    void insertRecipe(Recipe recipe);
 
     List<Recipe> getAllRecipes();
 
     Optional<Recipe> getRecipeById(Long id);
 
     ResponseEntity<?> updateRecipe(UpdateRecipeModel recipe);
+
+    ResponseEntity<?> deleteRecipe(Recipe recipe);
 }
