@@ -18,6 +18,8 @@ public interface IRecipeService {
 
     Optional<Recipe> getRecipeById(Long id);
 
+    List<Recipe> getRecipeByName(String searchTerm);
+
     ResponseEntity<?> updateRecipe(UpdateRecipeModel recipe);
 
     ResponseEntity<?> deleteRecipe(Recipe recipe);

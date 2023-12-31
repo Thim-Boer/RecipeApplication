@@ -58,6 +58,15 @@ public class RecipeController {
         return ResponseEntity.ok().body(result);
     }
     
+    @GetMapping("/searchRecipeByName/{searchterm}")
+    public ResponseEntity<?> getRecipeByName(@PathVariable String searchterm) {
+        var result = recipeService.getRecipeByName(searchterm);
+        if(result.isEmpty()) {
+            return ResponseEntity.badRequest().body("No entity found");
+        }
+        return ResponseEntity.ok().body(result);
+    }
+    
     @DeleteMapping("/deleteRecipe")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
     public ResponseEntity<?> deleteRecipe(@RequestBody Recipe recipe) {
