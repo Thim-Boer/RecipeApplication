@@ -49,6 +49,11 @@ public class RecipeService implements IRecipeService {
     public Optional<Recipe> getRecipeById(Long id) {
         return recipeRepository.findById(id);
     }
+    
+    @Override
+    public List<Recipe> getRecipeByName(String searchterm) {
+        return recipeRepository.findByNameContainingIgnoreCase(searchterm);
+    }
 
     @Override
     public ResponseEntity<?> updateRecipe(UpdateRecipeModel recipes) {

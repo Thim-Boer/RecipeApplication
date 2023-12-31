@@ -2,12 +2,14 @@ package recipeapplication.application.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import recipeapplication.application.models.Review;
 import recipeapplication.application.models.UpdateReviewModel;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.ReviewRepository;
 
+@Service
 public class ReviewService implements IReviewService {
     private ReviewRepository reviewRepository;
     
