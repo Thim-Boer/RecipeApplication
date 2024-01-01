@@ -6,19 +6,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.UpdateRecipeModel;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.RecipeRepository;
+import recipeapplication.application.repository.ImageRepository;
 
 @Service
 public class RecipeService implements IRecipeService {
 
     private final RecipeRepository recipeRepository;
+    private final ImageRepository imageRepository;
 
     @Autowired
-    public RecipeService(RecipeRepository recipeRepository) {
+    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository) {
         this.recipeRepository = recipeRepository;
+        this.imageRepository = imageRepository;
     }
     
     @Override
@@ -76,6 +80,12 @@ public class RecipeService implements IRecipeService {
             return ResponseEntity.notFound().build();
         }
         recipeRepository.delete(recipe);
+        return ResponseEntity.ok().build();
+    }
+    
+    @Override
+    public ResponseEntity<?> UploadImage(Image image) {
+        imageRepository.save(image);
         return ResponseEntity.ok().build();
     }
 }
