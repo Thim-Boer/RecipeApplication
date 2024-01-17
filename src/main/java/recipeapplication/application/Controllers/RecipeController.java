@@ -1,12 +1,14 @@
 package recipeapplication.application.controllers;
 
 import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
@@ -14,7 +16,6 @@ import recipeapplication.application.models.UpdateRecipeModel;
 import recipeapplication.application.models.User;
 import recipeapplication.application.services.IRecipeService;
 
-import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
@@ -61,19 +62,24 @@ public class RecipeController {
         }
         return ResponseEntity.ok().body(result);
     }
-    
+
     @PostMapping("/upload")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
     public ResponseEntity<?> handleFileUpload(@ModelAttribute UploadDto file) {
         try {
-            byte[] fileBytes = file.getFile().getBytes();
-            byte[] base64String = Base64.getEncoder().encode(fileBytes);
-            Image image = new Image(file.getId(), file.getRecipeId(), base64String);
-            return this.recipeService.UploadImage(image);
-        } catch (IOException e) {
+            byte[] fileBytes = file.image.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
+            Image image = new Image(file.getId(), file.getRecipeId(), base64Image);
+            return this.recipeService.uploadImage(image);
+        } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.unprocessableEntity().build();
+            return null;
         }
+    }
+
+    @GetMapping("/downloadImage")
+    public ResponseEntity<?> downloadPdf(@PathVariable Long id) {
+        return this.recipeService.downloadPdf(id);
     }
 
     @GetMapping("/searchRecipeByName/{searchterm}")
@@ -98,9 +104,9 @@ public class RecipeController {
 
     @PostConstruct
     public void executeOnStartup() {
-        Recipe entity1 = new Recipe(42L, "Random Recipe", "Mix all ingredients and cook for 30 minutes.", 45, 3, 4,
+        Recipe entity1 = new Recipe(42L, "Random Recipe", "Mix all ingredients. Then cook for 30 minutes. Leave for another 5. You are done.", 45, 3, 4,
                 "Calories: 300, Protein: 15g, Fat: 10g", "Gluten, Dairy", 5, 1, "Mixing bowl, Pan",
-                "Flour, Eggs, Milk, Sugar, Salt");
+                "500g Flour, 4 Eggs, 500ml Milk, 75g Sugar, 25g Salt");
         Recipe entity2 = new Recipe(123456789L, "New Recipe Name",
                 "Combine ingredients and bake at 350°F for 45 minutes.", 30, 5, 2,
                 "Calories: 250, Protein: 20g, Fat: 8g", "Gluten-free, Vegan", 7, 5, "Baking dish, Mixing bowl, Oven",

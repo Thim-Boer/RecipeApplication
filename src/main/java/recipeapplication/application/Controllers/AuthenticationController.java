@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.annotation.PostConstruct;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.models.Role;
 import recipeapplication.application.services.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 @RestController
@@ -30,5 +32,10 @@ public class AuthenticationController {
     @PostMapping("/signin") 
     public  ResponseEntity<AuthenticationResponse> signin(@RequestBody SignInRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
+    }
+
+    @PostConstruct
+    public void executeOnStartup() {
+        this.authenticationService.register(new SignUpRequest("user", "user", "user@user.com", "password", Role.VIEWER));
     }
 }

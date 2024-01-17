@@ -25,5 +25,9 @@ public interface IRecipeService {
 
     ResponseEntity<?> deleteRecipe(Recipe recipe);
 
-    ResponseEntity<?> UploadImage(Image image);
+    ResponseEntity<?> uploadImage(Image image);
+
+    Optional<Image> getImage();
+
+    ResponseEntity<?> downloadPdf(Long id);
 }
