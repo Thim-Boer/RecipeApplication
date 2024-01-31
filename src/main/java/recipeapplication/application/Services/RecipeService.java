@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.itextpdf.text.BaseColor;
@@ -15,14 +16,19 @@ import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+import recipeapplication.application.Exceptions.NotificationCollector;
+import recipeapplication.application.Exceptions.RecipeErrorCodes;
+import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.UpdateRecipeModel;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.RecipeRepository;
+import recipeapplication.application.repository.UserRepository;
 import recipeapplication.application.repository.ImageRepository;
 
 @Service
@@ -30,30 +36,44 @@ public class RecipeService implements IRecipeService {
 
     private final RecipeRepository recipeRepository;
     private final ImageRepository imageRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository) {
+    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository, UserRepository userRepository) {
         this.recipeRepository = recipeRepository;
         this.imageRepository = imageRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public boolean checkIfUserIsAuthorized(User user, Recipe recipe) {
-        var userId = user.getId();
-        var userRole = user.getRole().name();
-        if (!userId.equals(recipe.userId)) {
-            if (userRole.equals("ADMIN")) {
-                return true;
-            } else {
-                return false;
+    public boolean checkIfUserIsAuthorized(Recipe recipe) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User userDetails = (User) principal;
+        var foundUser = userRepository.findById(userDetails.getId().longValue());
+        var userRole = userDetails.getRole().name();
+
+        if(!foundUser.isPresent()) {
+            return false;
+        } else {
+            if (!foundUser.get().getId().equals(recipe.userId)) {
+                if (userRole.equals("ADMIN")) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
     }
 
     @Override
-    public void insertRecipe(Recipe recipe) {
+    public ResponseEntity<?> insertRecipe(Recipe recipe) {
+        if(recipeRepository.findByNameContainingIgnoreCase(recipe.name).isEmpty()) {
+            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
+        }
+            
         recipeRepository.save(recipe);
+        return ResponseEntity.ok().build();
     }
 
     @Override
@@ -62,42 +82,70 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public Optional<Recipe> getRecipeById(Long id) {
-        return recipeRepository.findById(id);
-    }
-
-    @Override
-    public List<Recipe> getRecipeByName(String searchterm) {
-        return recipeRepository.findByNameContainingIgnoreCase(searchterm);
-    }
-
-    @Override
-    public ResponseEntity<?> updateRecipe(UpdateRecipeModel recipes) {
-        var orginalRecipe = recipes.getOriginal();
-        if (!recipes.doIdsMatch()) {
-            return ResponseEntity.unprocessableEntity().build();
+    public ResponseEntity<?> getRecipeById(Long id) {
+        var result = recipeRepository.findById(id);
+        if(!result.isPresent()) {
+            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
         }
-        var recipe = recipeRepository.findById(orginalRecipe.id);
-        if (!recipe.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        recipeRepository.save(recipes.getUpdated());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(result);
     }
 
     @Override
-    public ResponseEntity<?> deleteRecipe(Recipe recipe) {
+    public List<Recipe> getRecipeByName(NotificationCollector collection, String searchterm) {
+        var result = recipeRepository.findByNameContainingIgnoreCase(searchterm);
+        if(result.isEmpty()) {
+            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+        }
+        return result;
+    }
+
+    @Override
+public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
+    var orginalRecipe = recipes.getOriginal();
+    if(!checkIfUserIsAuthorized(orginalRecipe)) {
+        collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+    }
+    if (!recipes.doIdsMatch()) {
+        collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch); 
+    }
+    var recipe = recipeRepository.findById(orginalRecipe.id);
+    if (!recipe.isPresent()) {
+        collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+    }
+    if (collection.HasErrors()) {
+        return null;
+    }
+    recipeRepository.save(recipes.getUpdated());
+    return ResponseEntity.ok().build();
+}
+
+
+    @Override
+    public ResponseEntity<?> deleteRecipe(NotificationCollector collection, Recipe recipe) {
+        if (!checkIfUserIsAuthorized(recipe)) {
+            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+        }
         var foundRecipe = recipeRepository.findById(recipe.id);
         if (!foundRecipe.isPresent()) {
-            return ResponseEntity.notFound().build();
+            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+        }
+        if(collection.HasErrors()) {
+            return null;
         }
         recipeRepository.delete(recipe);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    public ResponseEntity<?> uploadImage(Image image) {
-        imageRepository.save(image);
+    public ResponseEntity<?> uploadImage(UploadDto file) {
+        try {
+            byte[] fileBytes = file.image.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
+            Image image = new Image(file.getId(), file.getRecipeId(), base64Image);
+            imageRepository.save(image);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(RecipeErrorCodes.CannotBeUploaded);
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -107,28 +155,34 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> downloadPdf(Long id) {
-        Optional<Recipe> foundRecipe = getRecipeById(id);
-
-        if (foundRecipe.isPresent()) {
-
-            String pdfContent = buildPdfContent(foundRecipe.get());
+public ResponseEntity<?> downloadPdf(Long id) {
+    ResponseEntity<?> foundRecipeResponse = getRecipeById(id);
+    
+    if(foundRecipeResponse.getStatusCode().is2xxSuccessful()) {
+        var body = foundRecipeResponse.getBody();
+        if(body instanceof Recipe) {
+            Recipe recipe = (Recipe) body;
+            String pdfContent = buildPdfContent(recipe); // Passing recipe to buildPdfContent if needed
+            
             ByteArrayOutputStream pdfStream = generatePdf(pdfContent);
-
-            if (pdfStream != null) {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_PDF);
-                headers.setContentDispositionFormData("attachment", foundRecipe.get().name + ".pdf");
-                headers.setContentLength(pdfStream.toByteArray().length);
-
-                return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
-            }
+            
+        if (pdfStream != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", recipe.name + ".pdf"); // Assuming name is a field in Recipe
+            headers.setContentLength(pdfStream.size());
+            
+            return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
         }
+    } else {
+        return ResponseEntity.badRequest().build();
     }
+    } else {
+        return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
+    }
+}
 
     private String buildPdfContent(Recipe recipe) {
         StringBuilder contentBuilder = new StringBuilder();
