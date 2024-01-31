@@ -5,27 +5,28 @@ import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 
+import recipeapplication.application.Exceptions.NotificationCollector;
+import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.UpdateRecipeModel;
-import recipeapplication.application.models.User;
 
 public interface IRecipeService {
-    boolean checkIfUserIsAuthorized(User user, Recipe recipe);
+    boolean checkIfUserIsAuthorized(Recipe recipe);
 
-    void insertRecipe(Recipe recipe);
+    ResponseEntity<?> insertRecipe(Recipe recipe);
 
     List<Recipe> getAllRecipes();
 
-    Optional<Recipe> getRecipeById(Long id);
+    ResponseEntity<?> getRecipeById(Long id);
 
-    List<Recipe> getRecipeByName(String searchTerm);
+    List<Recipe> getRecipeByName(NotificationCollector collection, String searchTerm);
 
-    ResponseEntity<?> updateRecipe(UpdateRecipeModel recipe);
+    ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipe);
 
-    ResponseEntity<?> deleteRecipe(Recipe recipe);
+    ResponseEntity<?> deleteRecipe(NotificationCollector collection, Recipe recipe);
 
-    ResponseEntity<?> uploadImage(Image image);
+    ResponseEntity<?> uploadImage(UploadDto image);
 
     Optional<Image> getImage();
 
