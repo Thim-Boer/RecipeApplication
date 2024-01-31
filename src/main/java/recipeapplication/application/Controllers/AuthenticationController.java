@@ -1,18 +1,25 @@
 package recipeapplication.application.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import recipeapplication.application.Exceptions.RecipeErrorCodes;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
 import recipeapplication.application.models.Role;
 import recipeapplication.application.services.AuthenticationService;
 import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -26,7 +33,7 @@ public class AuthenticationController {
         if (register.getBody().getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(register.getBody());
         }
-        return ResponseEntity.unprocessableEntity().build();
+        return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
     }
     
     @PostMapping("/signin") 
@@ -34,8 +41,14 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok("Logout successful");
+    }
+
     @PostConstruct
     public void executeOnStartup() {
+        this.authenticationService.register(new SignUpRequest("admin", "admin", "admin@admin.com", "password", Role.ADMIN));
         this.authenticationService.register(new SignUpRequest("user", "user", "user@user.com", "password", Role.VIEWER));
     }
 }
