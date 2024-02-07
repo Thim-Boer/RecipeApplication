@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.OneToOne;
 
 @Entity
 public class Recipe {
@@ -20,32 +21,35 @@ public class Recipe {
     @NotBlank
     public String instructions;
 
-    @Min(value = 1, message = "Duur moet groter zijn dan 0")
+    @Min(value = 1, message = "Duration must be greater than 0")
     public int duration;
 
-    @Min(value = 1, message = "Moeilijkheidsgraad moet groter zijn dan 0")
-    @Max(value = 5, message = "Moeilijkheidsgraad mag niet groter zijn dan 5")
+    @Min(value = 1, message = "Difficulty must be greater than 0")
+    @Max(value = 5, message = "Difficulty must not be greater than 5")
     public int difficulty;
 
-    @Min(value = 1, message = "Portiegrootte moet groter zijn dan 0")
+    @Min(value = 1, message = "Portion size must be greater than 0")
     public int portionSize;
 
     public String nutritionalInformation;
 
     public String allergies;
 
-    @Min(value = 0, message = "Categorie ID moet groter zijn dan -1")
+    @Min(value = 0, message = "Category ID must be greater than -1")
     public int categoryId;
 
-    @Min(value = 1, message = "Gebruikers-ID moet groter zijn dan 0")
+    @Min(value = 1, message = "User ID must be greater than 0")
     public int userId;
 
     public String supplies;
 
     public String ingredients;
 
+    @OneToOne(mappedBy = "recipe")
+    private Image image;
+
     public Recipe(){}
-    
+
     public Recipe(Long id, String name, String instructions, int duration, int difficulty, int portionSize, String nutritionalInformation, String allergies, int categoryId, int userId, String supplies, String ingredients) {
         this.id = id;
         this.name = name;
@@ -70,6 +74,6 @@ public class Recipe {
             return false;
         }
         Recipe recipe = (Recipe) obj;
-        return id == recipe.id && name.equals(recipe.name);
+        return id.equals(recipe.id) && name.equals(recipe.name);
     }
 }
