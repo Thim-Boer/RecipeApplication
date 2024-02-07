@@ -4,18 +4,40 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
+import recipeapplication.application.Exceptions.NotificationCollector;
+import recipeapplication.application.Exceptions.RecipeErrorCodes;
+import recipeapplication.application.dto.UploadDto;
+import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
+import recipeapplication.application.models.Role;
 import recipeapplication.application.models.UpdateRecipeModel;
+import recipeapplication.application.models.User;
 import recipeapplication.application.repository.ImageRepository;
 import recipeapplication.application.repository.RecipeRepository;
+import recipeapplication.application.repository.UserRepository;
 import recipeapplication.application.services.RecipeService;
 import recipeapplication.application.services.TokenService;
 
@@ -23,7 +45,10 @@ import recipeapplication.application.services.TokenService;
 public class RecipeTests {
 	@Mock
 	private RecipeRepository recipeRepository;
-
+	
+	@Mock
+    private UserRepository userRepository;
+	
 	@Mock
 	private ImageRepository imageRepository;
 
@@ -33,14 +58,162 @@ public class RecipeTests {
 	@InjectMocks
 	TokenService tokenService;
 
+
+	@Test
+	void testCheckIfUserIsAuthorized() {
+    	SecurityContext securityContext = mock(SecurityContext.class);
+    	SecurityContextHolder.setContext(securityContext);
+
+    	User user = new User();
+    	user.setEmail("test@test.com");
+    	user.setFirstname("test");
+    	user.setLastname("test");
+    	user.setRole(Role.USER);
+    	user.setId(1);
+
+    	Authentication authentication = mock(Authentication.class);
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+
+    	when(authentication.getPrincipal()).thenReturn(user);
+
+    	when(userRepository.findById(1)).thenReturn(Optional.of(user));
+
+    	assertFalse(recipeService.checkIfUserIsAuthorized(GetRecipe(0)));
+	}
+	
+	@Test
+	void testCheckIfAdminIsAuthorized() {
+    	SecurityContext securityContext = mock(SecurityContext.class);
+    	SecurityContextHolder.setContext(securityContext);
+
+    	User user = new User();
+    	user.setEmail("test@test.com");
+    	user.setFirstname("test");
+    	user.setLastname("test");
+    	user.setRole(Role.ADMIN);
+    	user.setId(1);
+    	Authentication authentication = mock(Authentication.class);
+
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getPrincipal()).thenReturn(user);
+    	when(userRepository.findById(1)).thenReturn(Optional.of(user));
+
+    	assertTrue(recipeService.checkIfUserIsAuthorized(GetRecipe(0)));
+	}
+
+	@Test
+	void getAllRecipes() {
+        ArrayList<Recipe> list = new ArrayList<>();
+		list.add(GetRecipe(0));
+		list.add(GetRecipe(1));
+		list.add(GetRecipe(2));
+		list.add(GetRecipe(3));
+		
+		when(recipeRepository.findAll()).thenReturn(list);
+		var result = recipeRepository.findAll();
+		
+		assertEquals(result, list);
+	}
+	
+	@Test
+	void getRecipeById() {
+		when(recipeRepository.findById(1L)).thenReturn(Optional.of(GetRecipe(0)));
+		
+		var result = recipeRepository.findById(1L);
+		
+		assertEquals(result.get(), GetRecipe(0));
+	}
+
+
 	@Test
 	public void testInsertRecipe() {
 		var recipe = GetRecipe(0);
+		when(recipeRepository.findByNameContainingIgnoreCase(anyString())).thenReturn(new ArrayList<>());
 		when(recipeRepository.save(any(Recipe.class))).thenReturn(recipe);
 
 		recipeService.insertRecipe(recipe);
 
 		Mockito.verify(recipeRepository).save(recipe);
+	}
+	
+	@Test
+    void testInsertDuplicateRecipe() {
+        Recipe recipe = GetRecipe(0);
+		ArrayList<Recipe> list = new ArrayList<>();
+		list.add(recipe);
+
+        when(recipeRepository.findByNameContainingIgnoreCase(anyString())).thenReturn(list);
+        ResponseEntity<?> response = recipeService.insertRecipe(recipe);
+
+		assertEquals(response, ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists));
+    }
+
+	@Test
+	void getRecipeByName() {
+		List<Recipe> list = new ArrayList<>();
+		list.add(GetRecipe(0));
+		
+		when(recipeRepository.findByNameContainingIgnoreCase(anyString())).thenReturn(list);
+		var result = recipeRepository.findByNameContainingIgnoreCase(anyString());
+		
+		assertEquals(result, list);
+	}
+
+	@Test
+    void testUploadImage_Success() {
+        UploadDto file = new UploadDto(null, 1L, GetRecipe(0));
+        file.setId(1L);
+        file.setRecipe(GetRecipe(0));
+		byte[] fileContent = "".getBytes();
+		MultipartFile multipartFile = new MockMultipartFile("file", "filename.txt", "text/plain", fileContent);
+		file.setFile(multipartFile);
+        
+        ResponseEntity<?> responseEntity = recipeService.uploadImage(file);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        verify(imageRepository, times(1)).save(any());
+    }
+
+	@Test
+    void testUploadImage_Failure() {
+        UploadDto file = new UploadDto(null, null, null);
+
+        ResponseEntity<?> responseEntity = recipeService.uploadImage(file);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(RecipeErrorCodes.CannotBeUploaded, responseEntity.getBody());
+    }
+
+	@Test
+    void testGetImage() {
+        Image mockImage = new Image(1L, GetRecipe(0), "base64Image");
+        when(imageRepository.findById(1L)).thenReturn(Optional.of(mockImage));
+
+        Optional<Image> image = recipeService.getImage();
+
+        assertEquals(mockImage, image.orElse(null));
+    }
+
+
+	@Test
+	void testDownloadPdf_Success() {
+		NotificationCollector collection = new NotificationCollector();
+		
+		when(recipeRepository.findById(1l)).thenReturn(Optional.of(GetRecipe(0)));
+		when(recipeService.getRecipeById(collection, 1L)).thenReturn(Optional.of(GetRecipe(0)));
+		var result = recipeService.downloadPdf(1L);
+	
+		assertEquals(result.getStatusCode(), HttpStatus.OK);
+		assertFalse(collection.HasErrors());
+	}
+
+	@Test
+	void testDownloadPdf_Failure() {
+		NotificationCollector collection = new NotificationCollector();
+		when(recipeService.getRecipeById(collection, 1L)).thenReturn(Optional.empty());
+		recipeService.downloadPdf(1L);
+	
+		assertTrue(collection.HasErrors());
 	}
 
 	@Test
@@ -62,8 +235,6 @@ public class RecipeTests {
 
 		assertTrue(updateModel.doIdsMatch(), "IDs should match for the same recipe");
 	}
-
-
 
 	@Test 
 	public void testIfUpdateModelGetReturned() {

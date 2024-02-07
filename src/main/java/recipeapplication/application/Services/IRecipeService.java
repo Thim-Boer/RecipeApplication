@@ -18,7 +18,7 @@ public interface IRecipeService {
 
     List<Recipe> getAllRecipes();
 
-    ResponseEntity<?> getRecipeById(Long id);
+    Optional<Recipe> getRecipeById(NotificationCollector collection, Long id);
 
     List<Recipe> getRecipeByName(NotificationCollector collection, String searchTerm);
 
