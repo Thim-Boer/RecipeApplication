@@ -10,10 +10,10 @@ public enum Permission {
     ADMIN_UPDATE("admin:update"),
     ADMIN_CREATE("admin:create"),
     ADMIN_DELETE("admin:delete"),
-    VIEWER_READ("management:read"),
-    VIEWER_UPDATE("management:update"),
-    VIEWER_CREATE("management:create"),
-    VIEWER_DELETE("management:delete");
+    USER_READ("management:read"),
+    USER_UPDATE("management:update"),
+    USER_CREATE("management:create"),
+    USER_DELETE("management:delete");
 
     @Getter
     private final String permission;

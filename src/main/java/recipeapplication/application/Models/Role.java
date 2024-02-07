@@ -4,12 +4,11 @@ import static recipeapplication.application.models.Permission.ADMIN_CREATE;
 import static recipeapplication.application.models.Permission.ADMIN_DELETE;
 import static recipeapplication.application.models.Permission.ADMIN_READ;
 import static recipeapplication.application.models.Permission.ADMIN_UPDATE;
-import static recipeapplication.application.models.Permission.VIEWER_CREATE;
-import static recipeapplication.application.models.Permission.VIEWER_DELETE;
-import static recipeapplication.application.models.Permission.VIEWER_READ;
-import static recipeapplication.application.models.Permission.VIEWER_UPDATE;
+import static recipeapplication.application.models.Permission.USER_CREATE;
+import static recipeapplication.application.models.Permission.USER_DELETE;
+import static recipeapplication.application.models.Permission.USER_READ;
+import static recipeapplication.application.models.Permission.USER_UPDATE;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,37 +20,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Role {
 
-  USER(Collections.emptySet()),
-  ADMIN(
-          Set.of(
-                  ADMIN_READ,
-                  ADMIN_UPDATE,
-                  ADMIN_DELETE,
-                  ADMIN_CREATE,
-                  VIEWER_READ,
-                  VIEWER_UPDATE,
-                  VIEWER_DELETE,
-                  VIEWER_CREATE
-          )
-  ),
-  VIEWER(
-          Set.of(
-                  VIEWER_READ,
-                  VIEWER_UPDATE,
-                  VIEWER_DELETE,
-                  VIEWER_CREATE
-          )
-  );
+        USER(Set.of(
+                        USER_READ,
+                        USER_UPDATE,
+                        USER_DELETE,
+                        USER_CREATE)),
+        ADMIN(Set.of(
+                        ADMIN_READ,
+                        ADMIN_UPDATE,
+                        ADMIN_DELETE,
+                        ADMIN_CREATE));
 
-  @Getter
-  private final Set<Permission> permissions;
+        @Getter
+        private final Set<Permission> permissions;
 
-  public List<SimpleGrantedAuthority> getAuthorities() {
-    var authorities = getPermissions()
-            .stream()
-            .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
-            .collect(Collectors.toList());
-    authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
-    return authorities;
-  }
+        public List<SimpleGrantedAuthority> getAuthorities() {
+                var authorities = getPermissions()
+                                .stream()
+                                .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
+                                .collect(Collectors.toList());
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
+                return authorities;
+        }
 }

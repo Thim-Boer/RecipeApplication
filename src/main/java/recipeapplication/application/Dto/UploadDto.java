@@ -4,18 +4,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import recipeapplication.application.models.Recipe;
 
 @Entity
 public class UploadDto {
     @Id
     public Long id;
-    public int recipeId;
+    public Recipe recipe;
     public MultipartFile image;
 
-    public UploadDto(MultipartFile image, Long id, int recipeId) {
+    public UploadDto(MultipartFile image, Long id, Recipe recipe) {
         this.image = image;
         this.id = id;
-        this.recipeId = recipeId;
+        this.recipe = recipe;
     }
 
     public MultipartFile getFile() {
@@ -34,11 +35,11 @@ public class UploadDto {
         this.id = id;
     }
 
-    public int getRecipeId() {
-        return recipeId;
+    public Recipe getRecipe() {
+        return recipe;
     }
 
-    public void setRecipeId(int recipeId) {
-        this.recipeId = recipeId;
+    public void setRecipe(Recipe recipe) {
+        this.recipe = recipe;
     }
 }

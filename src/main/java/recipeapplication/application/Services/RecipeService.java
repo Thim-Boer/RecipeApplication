@@ -39,7 +39,8 @@ public class RecipeService implements IRecipeService {
     private final UserRepository userRepository;
 
     @Autowired
-    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository, UserRepository userRepository) {
+    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository,
+            UserRepository userRepository) {
         this.recipeRepository = recipeRepository;
         this.imageRepository = imageRepository;
         this.userRepository = userRepository;
@@ -49,10 +50,10 @@ public class RecipeService implements IRecipeService {
     public boolean checkIfUserIsAuthorized(Recipe recipe) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;
-        var foundUser = userRepository.findById(userDetails.getId().longValue());
+        var foundUser = userRepository.findById(userDetails.getId());
         var userRole = userDetails.getRole().name();
 
-        if(!foundUser.isPresent()) {
+        if (!foundUser.isPresent()) {
             return false;
         } else {
             if (!foundUser.get().getId().equals(recipe.userId)) {
@@ -68,10 +69,10 @@ public class RecipeService implements IRecipeService {
 
     @Override
     public ResponseEntity<?> insertRecipe(Recipe recipe) {
-        if(recipeRepository.findByNameContainingIgnoreCase(recipe.name).isEmpty()) {
+        if (!recipeRepository.findByNameContainingIgnoreCase(recipe.name).isEmpty()) {
             return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
         }
-            
+
         recipeRepository.save(recipe);
         return ResponseEntity.ok().build();
     }
@@ -82,43 +83,42 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> getRecipeById(Long id) {
+    public Optional<Recipe> getRecipeById(NotificationCollector collection, Long id) {
         var result = recipeRepository.findById(id);
-        if(!result.isPresent()) {
-            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
-        }
-        return ResponseEntity.ok().body(result);
-    }
-
-    @Override
-    public List<Recipe> getRecipeByName(NotificationCollector collection, String searchterm) {
-        var result = recipeRepository.findByNameContainingIgnoreCase(searchterm);
-        if(result.isEmpty()) {
+        if (!result.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
         }
         return result;
     }
 
     @Override
-public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
-    var orginalRecipe = recipes.getOriginal();
-    if(!checkIfUserIsAuthorized(orginalRecipe)) {
-        collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+    public List<Recipe> getRecipeByName(NotificationCollector collection, String searchterm) {
+        var result = recipeRepository.findByNameContainingIgnoreCase(searchterm);
+        if (result.isEmpty()) {
+            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+        }
+        return result;
     }
-    if (!recipes.doIdsMatch()) {
-        collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch); 
-    }
-    var recipe = recipeRepository.findById(orginalRecipe.id);
-    if (!recipe.isPresent()) {
-        collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-    }
-    if (collection.HasErrors()) {
-        return null;
-    }
-    recipeRepository.save(recipes.getUpdated());
-    return ResponseEntity.ok().build();
-}
 
+    @Override
+    public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
+        var orginalRecipe = recipes.getOriginal();
+        if (!checkIfUserIsAuthorized(orginalRecipe)) {
+            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+        }
+        if (!recipes.doIdsMatch()) {
+            collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch);
+        }
+        var recipe = recipeRepository.findById(orginalRecipe.id);
+        if (!recipe.isPresent()) {
+            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+        }
+        if (collection.HasErrors()) {
+            return null;
+        }
+        recipeRepository.save(recipes.getUpdated());
+        return ResponseEntity.ok().build();
+    }
 
     @Override
     public ResponseEntity<?> deleteRecipe(NotificationCollector collection, Recipe recipe) {
@@ -129,7 +129,7 @@ public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRe
         if (!foundRecipe.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
         }
-        if(collection.HasErrors()) {
+        if (collection.HasErrors()) {
             return null;
         }
         recipeRepository.delete(recipe);
@@ -141,7 +141,7 @@ public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRe
         try {
             byte[] fileBytes = file.image.getBytes();
             String base64Image = Base64.getEncoder().encodeToString(fileBytes);
-            Image image = new Image(file.getId(), file.getRecipeId(), base64Image);
+            Image image = new Image(file.getId(), file.getRecipe(), base64Image);
             imageRepository.save(image);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(RecipeErrorCodes.CannotBeUploaded);
@@ -155,34 +155,30 @@ public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRe
     }
 
     @Override
-public ResponseEntity<?> downloadPdf(Long id) {
-    ResponseEntity<?> foundRecipeResponse = getRecipeById(id);
-    
-    if(foundRecipeResponse.getStatusCode().is2xxSuccessful()) {
-        var body = foundRecipeResponse.getBody();
-        if(body instanceof Recipe) {
-            Recipe recipe = (Recipe) body;
-            String pdfContent = buildPdfContent(recipe); // Passing recipe to buildPdfContent if needed
-            
+    public ResponseEntity<?> downloadPdf(Long id) {
+        Optional<Recipe> foundRecipeResponse = getRecipeById(new NotificationCollector(), id);
+
+        if (foundRecipeResponse.isPresent()) {
+            var recipe = foundRecipeResponse.get();
+            String pdfContent = buildPdfContent(recipe);
+
             ByteArrayOutputStream pdfStream = generatePdf(pdfContent);
-            
-        if (pdfStream != null) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", recipe.name + ".pdf"); // Assuming name is a field in Recipe
-            headers.setContentLength(pdfStream.size());
-            
-            return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
+
+            if (pdfStream != null) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDispositionFormData("attachment", recipe.name + ".pdf");
+
+                headers.setContentLength(pdfStream.size());
+
+                return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
+            }
+        } else{
+            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
         }
-    } else {
-        return ResponseEntity.badRequest().build();
     }
-    } else {
-        return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
-    }
-}
 
     private String buildPdfContent(Recipe recipe) {
         StringBuilder contentBuilder = new StringBuilder();
@@ -191,14 +187,14 @@ public ResponseEntity<?> downloadPdf(Long id) {
                 .append("Nutritional Information: ").append(recipe.nutritionalInformation).append("\n")
                 .append("Portion Size: ").append(recipe.portionSize).append("\n")
                 .append("Difficulty: ").append(recipe.difficulty).append("\n");
-                
-                contentBuilder.append("\n\nIngredients:\n\n");
-                String[] ingredients = recipe.ingredients.split("\\,");
-                for (String ingredient : ingredients) {
-                    contentBuilder.append("* " + ingredient.trim()).append("\n");
-                }
-                
-                contentBuilder.append("\nInstructions: \n\n");
+
+        contentBuilder.append("\n\nIngredients:\n\n");
+        String[] ingredients = recipe.ingredients.split("\\,");
+        for (String ingredient : ingredients) {
+            contentBuilder.append("* " + ingredient.trim()).append("\n");
+        }
+
+        contentBuilder.append("\nInstructions: \n\n");
         String[] instructions = recipe.instructions.split("\\.");
         for (String instruction : instructions) {
             contentBuilder.append("*  " + instruction.trim()).append("\n");

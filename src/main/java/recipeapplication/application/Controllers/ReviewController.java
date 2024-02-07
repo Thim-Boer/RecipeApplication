@@ -22,13 +22,13 @@ private IReviewService reviewService;
         this.reviewService = reviewService;
     }
     @PostMapping("/addReview")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<String> addReviewToReview(@RequestBody Review review) {
         return ResponseEntity.ok("This review has been added");
     }
     
     @PutMapping("/updateReview")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> changeReview(@RequestBody UpdateReviewModel updateModel) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;
@@ -39,7 +39,7 @@ private IReviewService reviewService;
     }
     
     @DeleteMapping("/deleteReview")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> deleteReview(@RequestBody Review review) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;

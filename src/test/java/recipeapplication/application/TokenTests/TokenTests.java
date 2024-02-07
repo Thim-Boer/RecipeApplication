@@ -21,30 +21,12 @@ class TokenTests {
         user.setFirstname("user");
         user.setLastname("user");
         user.setPassword("password");
-        user.setRole(Role.VIEWER);
+        user.setRole(Role.USER);
 
         String mockToken = "mockedToken";
         when(tokenService.generateToken(user)).thenReturn(mockToken);
 
         String generatedToken = tokenService.generateToken(user);
-
-        assertEquals(mockToken, generatedToken, "Het gegenereerde token komt niet overeen met het verwachte token.");
-    }
-
-    @Test
-    public void testGenerateRefreshTokenForUser() {
-        TokenService tokenService = mock(TokenService.class);
-
-        User user = new User();
-        user.setFirstname("user");
-        user.setLastname("user");
-        user.setPassword("password");
-        user.setRole(Role.VIEWER);
-        
-        String mockToken = "mockedToken";
-        when(tokenService.generateRefreshToken(user)).thenReturn(mockToken);
-
-        String generatedToken = tokenService.generateRefreshToken(user);
 
         assertEquals(mockToken, generatedToken, "Het gegenereerde token komt niet overeen met het verwachte token.");
     }

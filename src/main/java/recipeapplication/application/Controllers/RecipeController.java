@@ -29,13 +29,13 @@ public class RecipeController {
     }
 
     @PostMapping("/addRecipe")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> addRecipeToList(@RequestBody @Validated Recipe recipe) {
             return recipeService.insertRecipe(recipe);
     }
 
     @PutMapping("/updateRecipe")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> changeRecipe(@RequestBody @Validated UpdateRecipeModel updateModel) {
         NotificationCollector collection = new NotificationCollector();   
         var result = recipeService.updateRecipe(collection, updateModel);
@@ -51,13 +51,18 @@ public class RecipeController {
     }
     
     @GetMapping("/searchRecipeById/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER', 'USER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER', 'USER')")
     public ResponseEntity<?> getRecipeById(@PathVariable Long id) {
-        return recipeService.getRecipeById(id);
+        NotificationCollector collection = new NotificationCollector();   
+        var result = recipeService.getRecipeById(collection, id);
+        if(collection.HasErrors()) {
+            return ResponseEntity.badRequest().body(collection.returnErrors());
+        }
+        return ResponseEntity.ok(result);
     }
     
     @PostMapping("/upload")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> handleFileUpload(@ModelAttribute UploadDto file) {
         return this.recipeService.uploadImage(file);
     }
@@ -79,7 +84,7 @@ public class RecipeController {
     }
     
     @DeleteMapping("/deleteRecipe")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'VIEWER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<?> deleteRecipe(@RequestBody @Validated Recipe recipe) {
         NotificationCollector collection = new NotificationCollector();
         

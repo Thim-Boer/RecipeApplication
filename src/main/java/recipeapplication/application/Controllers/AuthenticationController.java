@@ -1,9 +1,6 @@
 package recipeapplication.application.controllers;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +46,6 @@ public class AuthenticationController {
     @PostConstruct
     public void executeOnStartup() {
         this.authenticationService.register(new SignUpRequest("admin", "admin", "admin@admin.com", "password", Role.ADMIN));
-        this.authenticationService.register(new SignUpRequest("user", "user", "user@user.com", "password", Role.VIEWER));
+        this.authenticationService.register(new SignUpRequest("user", "user", "user@user.com", "password", Role.USER));
     }
 }
