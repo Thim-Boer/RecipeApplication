@@ -20,8 +20,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import recipeapplication.application.Exceptions.NotificationCollector;
-import recipeapplication.application.Exceptions.RecipeErrorCodes;
+import recipeapplication.application.exceptions.NotificationCollector;
+import recipeapplication.application.exceptions.RecipeErrorCodes;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;

@@ -27,8 +27,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
-import recipeapplication.application.Exceptions.NotificationCollector;
-import recipeapplication.application.Exceptions.RecipeErrorCodes;
+import recipeapplication.application.exceptions.NotificationCollector;
+import recipeapplication.application.exceptions.RecipeErrorCodes;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;

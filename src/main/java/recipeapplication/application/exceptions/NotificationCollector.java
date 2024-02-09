@@ -1,4 +1,4 @@
-package recipeapplication.application.Exceptions;
+package recipeapplication.application.exceptions;
 
 import java.util.ArrayList;
 
