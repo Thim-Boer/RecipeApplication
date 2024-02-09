@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import recipeapplication.application.Exceptions.RecipeErrorCodes;
+import recipeapplication.application.exceptions.RecipeErrorCodes;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;

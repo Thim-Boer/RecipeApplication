@@ -1,4 +1,4 @@
-package recipeapplication.application.Exceptions;
+package recipeapplication.application.exceptions;
 
 public record RecipeErrorCodes(String ErrorDescription) {
     public static final RecipeErrorCodes DataNotFound = new RecipeErrorCodes("Er is geen data gevonden.");

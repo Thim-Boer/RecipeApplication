@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import recipeapplication.application.Exceptions.NotificationCollector;
+import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.UpdateRecipeModel;

@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 
-import recipeapplication.application.Exceptions.NotificationCollector;
+import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
