@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import recipeapplication.application.models.Role;
 
 @Data
 @Builder
@@ -15,5 +14,4 @@ public class SignUpRequest {
     private String lastname;
     private String email;
     private String password;
-    private Role role;
 }

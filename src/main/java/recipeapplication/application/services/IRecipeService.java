@@ -6,29 +6,31 @@ import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 
 import recipeapplication.application.exceptions.NotificationCollector;
+import recipeapplication.application.dto.UpdateRecipeModel;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
-import recipeapplication.application.models.UpdateRecipeModel;
 
 public interface IRecipeService {
-    boolean checkIfUserIsAuthorized(Recipe recipe);
+    boolean CheckIfUserIsAuthorized(Recipe recipe);
 
-    ResponseEntity<?> insertRecipe(Recipe recipe);
+    ResponseEntity<?> InsertRecipe(Recipe recipe);
 
-    List<Recipe> getAllRecipes();
+    List<Recipe> GetAllRecipes();
 
-    Optional<Recipe> getRecipeById(NotificationCollector collection, Long id);
+    Optional<Recipe> GetRecipeById(NotificationCollector collection, Long id);
 
-    List<Recipe> getRecipeByName(NotificationCollector collection, String searchTerm);
+    List<Recipe> GetRecipeByName(NotificationCollector collection, String searchTerm);
 
-    ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipe);
+    ResponseEntity<?> UpdateRecipe(NotificationCollector collection, UpdateRecipeModel recipe);
 
-    ResponseEntity<?> deleteRecipe(NotificationCollector collection, Recipe recipe);
+    ResponseEntity<?> DeleteRecipe(NotificationCollector collection, Long id);
 
-    ResponseEntity<?> uploadImage(UploadDto image);
+    ResponseEntity<?> UploadImage(UploadDto image);
 
-    Optional<Image> getImage();
+    Optional<Image> GetImage();
 
-    ResponseEntity<?> downloadPdf(Long id);
+    ResponseEntity<?> DownloadPdf(Long id);
+
+    void InsertCategories();
 }

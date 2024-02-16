@@ -19,27 +19,27 @@ public class UploadDto {
         this.recipe = recipe;
     }
 
-    public MultipartFile getFile() {
+    public MultipartFile GetFile() {
         return image;
     }
 
-    public void setFile(MultipartFile image) {
+    public void SetFile(MultipartFile image) {
         this.image = image;
     }
 
-    public Long getId() {
+    public Long GetId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void SetId(Long id) {
         this.id = id;
     }
 
-    public Recipe getRecipe() {
+    public Recipe GetRecipe() {
         return recipe;
     }
 
-    public void setRecipe(Recipe recipe) {
+    public void SetRecipe(Recipe recipe) {
         this.recipe = recipe;
     }
 }

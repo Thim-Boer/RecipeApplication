@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.models.Role;
 import recipeapplication.application.models.Token;
 import recipeapplication.application.models.TokenType;
 import recipeapplication.application.models.User;
@@ -12,6 +13,7 @@ import recipeapplication.application.repository.TokenRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,39 +29,41 @@ public class AuthenticationService {
     var user = User.builder()
         .firstname(request.getFirstname())
         .lastname(request.getLastname())
-        .email(request.getEmail())
+        .email(request.getEmail().toLowerCase())
         .password(passwordEncoder.encode(request.getPassword()))
-        .role(request.getRole())
+        .role(Role.USER)
         .build();
-    if(repository.findByEmail(request.getEmail()).isPresent()) {
+    if(repository.findByEmail(request.getEmail().toLowerCase()).isPresent()) {
       return ResponseEntity.unprocessableEntity().build();
     }
     var savedUser = repository.save(user);
-    var accessToken = jwtService.generateToken(user);
-    saveUserToken(savedUser, accessToken);
-    return ResponseEntity.ok(AuthenticationResponse.builder()
-        .accessToken(accessToken)
-        .build());
+    var accessToken = jwtService.GenerateToken(user);
+    SaveUserToken(savedUser, accessToken);
+    return ResponseEntity.ok("Gebruiker geregistreerd.");
   }
 
-  public AuthenticationResponse authenticate(SignInRequest request) {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(
-            request.getEmail(),
-            request.getPassword()
-        )
-    );
-    var user = repository.findByEmail(request.getEmail())
+  public AuthenticationResponse Authenticate(SignInRequest request) {
+    try {
+      authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(
+              request.getEmail().toLowerCase(),
+              request.getPassword()
+          )
+      );
+  } catch (AuthenticationException ex) {
+      return null;
+  }
+    var user = repository.findByEmail(request.getEmail().toLowerCase())
         .orElseThrow();
-    var accessToken = jwtService.generateToken(user);
-    revokeAllUserTokens(user);
-    saveUserToken(user, accessToken);
+    var accessToken = jwtService.GenerateToken(user);
+    RevokeAllUserTokens(user);
+    SaveUserToken(user, accessToken);
     return AuthenticationResponse.builder()
         .accessToken(accessToken)
         .build();
   }
 
-  private void saveUserToken(User user, String accessToken) {
+  private void SaveUserToken(User user, String accessToken) {
     var token = Token.builder()
         .user(user)
         .token(accessToken)
@@ -70,7 +74,7 @@ public class AuthenticationService {
     tokenRepository.save(token);
   }
 
-  private void revokeAllUserTokens(User user) {
+  private void RevokeAllUserTokens(User user) {
     var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
     if (validUserTokens.isEmpty())
       return;

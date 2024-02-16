@@ -13,7 +13,7 @@ public class NotificationCollector {
         return errors.size() > 0 ? true : false;
     }
 
-    public ArrayList<RecipeErrorCodes> returnErrors(){
+    public ArrayList<RecipeErrorCodes> ReturnErrors(){
         return errors;
     }
 }

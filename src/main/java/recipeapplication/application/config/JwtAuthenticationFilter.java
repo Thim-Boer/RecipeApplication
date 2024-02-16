@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain
   ) throws ServletException, IOException {
 
-    if (request.getServletPath().contains("/api/v1/auth") || request.getServletPath().contains("/api/recipes/searchRecipeByName/{searchterm}")) {
+    if (request.getServletPath().contains("/api/auth") || request.getServletPath().contains("/api/recipes/searchRecipeByName/{searchterm}")) {
       filterChain.doFilter(request, response);
       return;
     }
@@ -48,13 +48,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
     jwt = authHeader.substring(7);
-    userEmail = tokenService.extractUsername(jwt);
+    userEmail = tokenService.ExtractUsername(jwt);
     if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
       var isTokenValid = tokenRepository.findByToken(jwt)
           .map(t -> !t.isExpired() && !t.isRevoked())
           .orElse(false);
-      if (tokenService.isTokenValid(jwt, userDetails) && isTokenValid) {
+      if (tokenService.IsTokenValid(jwt, userDetails) && isTokenValid) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
             userDetails,
             null,

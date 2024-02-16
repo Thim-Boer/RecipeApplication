@@ -1,6 +1,7 @@
 package recipeapplication.application.models;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -11,7 +12,7 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class Recipe {
     @Id
-    @NotNull
+    @GeneratedValue
     public Long id;
 
     @NotBlank
@@ -38,7 +39,6 @@ public class Recipe {
     @Min(value = 0, message = "Category ID must be greater than -1")
     public int categoryId;
 
-    @Min(value = 1, message = "User ID must be greater than 0")
     public int userId;
 
     public String supplies;
