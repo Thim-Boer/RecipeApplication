@@ -27,11 +27,11 @@ public class SecurityConfiguration {
     private final LogoutHandler logoutHandler;
     
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain SecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers("/api/v1/auth/**", "/api/recipes/searchRecipeByName/{searchterm}")
+                        req.requestMatchers("/api/auth/**", "/api/recipes/searchRecipeByName/{searchterm}")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
@@ -39,7 +39,7 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).logout(logout ->
-                logout.logoutUrl("/api/v1/auth/logout")
+                logout.logoutUrl("/api/auth/logout")
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()));
         return http.build();

@@ -2,16 +2,18 @@ package recipeapplication.application.services;
 
 import org.springframework.http.ResponseEntity;
 
+import recipeapplication.application.dto.UpdateReviewModel;
+import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.models.Review;
-import recipeapplication.application.models.UpdateReviewModel;
-import recipeapplication.application.models.User;
 
 public interface IReviewService {
-    boolean checkIfUserIsAuthorized(User user, Review recipe);
+    boolean CheckIfUserIsAuthorized(Review review);
 
-    void insertReview(Review recipe);
+    ResponseEntity<?> GetReviewById(NotificationCollector collection, Long id);
 
-    ResponseEntity<?> updateReview(UpdateReviewModel recipe);
+    ResponseEntity<?> InsertReview(NotificationCollector collection, Review review);
 
-    ResponseEntity<?> deleteReview(Review recipe);
+    ResponseEntity<?> UpdateReview(NotificationCollector collection, UpdateReviewModel review);
+
+    ResponseEntity<?> DeleteReview(NotificationCollector collection, Long id);
 }
