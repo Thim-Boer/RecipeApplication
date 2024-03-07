@@ -7,13 +7,13 @@ import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.models.Review;
 
 public interface IReviewService {
-    boolean CheckIfUserIsAuthorized(Review review);
+    boolean checkIfUserIsAuthorized(Review review);
 
-    ResponseEntity<?> GetReviewById(NotificationCollector collection, Long id);
+    ResponseEntity<?> getReviewById(NotificationCollector collection, Long id);
 
-    ResponseEntity<?> InsertReview(NotificationCollector collection, Review review);
+    ResponseEntity<?> insertReview(NotificationCollector collection, Review review);
 
-    ResponseEntity<?> UpdateReview(NotificationCollector collection, UpdateReviewModel review);
+    ResponseEntity<?> updateReview(NotificationCollector collection, UpdateReviewModel review);
 
-    ResponseEntity<?> DeleteReview(NotificationCollector collection, Long id);
+    ResponseEntity<?> deleteReview(NotificationCollector collection, Long id);
 }
