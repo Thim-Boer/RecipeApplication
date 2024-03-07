@@ -37,12 +37,12 @@ public class AuthenticationService {
       return ResponseEntity.unprocessableEntity().build();
     }
     var savedUser = repository.save(user);
-    var accessToken = jwtService.GenerateToken(user);
-    SaveUserToken(savedUser, accessToken);
+    var accessToken = jwtService.generateToken(user);
+    saveUserToken(savedUser, accessToken);
     return ResponseEntity.ok("Gebruiker geregistreerd.");
   }
 
-  public AuthenticationResponse Authenticate(SignInRequest request) {
+  public AuthenticationResponse authenticate(SignInRequest request) {
     try {
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
@@ -55,15 +55,15 @@ public class AuthenticationService {
   }
     var user = repository.findByEmail(request.getEmail().toLowerCase())
         .orElseThrow();
-    var accessToken = jwtService.GenerateToken(user);
-    RevokeAllUserTokens(user);
-    SaveUserToken(user, accessToken);
+    var accessToken = jwtService.generateToken(user);
+    revokeAllUserTokens(user);
+    saveUserToken(user, accessToken);
     return AuthenticationResponse.builder()
         .accessToken(accessToken)
         .build();
   }
 
-  private void SaveUserToken(User user, String accessToken) {
+  private void saveUserToken(User user, String accessToken) {
     var token = Token.builder()
         .user(user)
         .token(accessToken)
@@ -74,7 +74,7 @@ public class AuthenticationService {
     tokenRepository.save(token);
   }
 
-  private void RevokeAllUserTokens(User user) {
+  private void revokeAllUserTokens(User user) {
     var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
     if (validUserTokens.isEmpty())
       return;

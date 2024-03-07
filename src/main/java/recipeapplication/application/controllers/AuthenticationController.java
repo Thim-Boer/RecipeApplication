@@ -23,7 +23,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> Signup(@RequestBody SignUpRequest request) {
+    public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
         var register = ResponseEntity.ok(authenticationService.register(request));
         if (register.getBody().getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(register.getBody());
@@ -32,8 +32,8 @@ public class AuthenticationController {
     }
     
     @PostMapping("/signin") 
-    public  ResponseEntity<?> Signin(@RequestBody SignInRequest request) {
-        var result =  ResponseEntity.ok(authenticationService.Authenticate(request));
+    public  ResponseEntity<?> signin(@RequestBody SignInRequest request) {
+        var result =  ResponseEntity.ok(authenticationService.authenticate(request));
         if(result.getBody() == null) {
             return ResponseEntity.badRequest().body("Verkeerde gegevens");
         } else {
@@ -42,7 +42,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> Logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok("Logout successful");
     }
 

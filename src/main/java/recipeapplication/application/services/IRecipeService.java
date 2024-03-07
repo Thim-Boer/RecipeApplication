@@ -12,25 +12,25 @@ import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 
 public interface IRecipeService {
-    boolean CheckIfUserIsAuthorized(Recipe recipe);
+    boolean checkIfUserIsAuthorized(Recipe recipe);
 
-    ResponseEntity<?> InsertRecipe(Recipe recipe);
+    ResponseEntity<?> insertRecipe(Recipe recipe);
 
-    List<Recipe> GetAllRecipes();
+    List<Recipe> getAllRecipes();
 
-    Optional<Recipe> GetRecipeById(NotificationCollector collection, Long id);
+    Optional<Recipe> getRecipeById(NotificationCollector collection, Long id);
 
-    List<Recipe> GetRecipeByName(NotificationCollector collection, String searchTerm);
+    List<Recipe> getRecipeByName(NotificationCollector collection, String searchTerm);
 
-    ResponseEntity<?> UpdateRecipe(NotificationCollector collection, UpdateRecipeModel recipe);
+    ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipe);
 
-    ResponseEntity<?> DeleteRecipe(NotificationCollector collection, Long id);
+    ResponseEntity<?> deleteRecipe(NotificationCollector collection, Long id);
 
-    ResponseEntity<?> UploadImage(UploadDto image);
+    ResponseEntity<?> uploadImage(UploadDto image);
 
-    Optional<Image> GetImage();
+    Optional<Image> getImage();
 
-    ResponseEntity<?> DownloadPdf(Long id);
+    ResponseEntity<?> downloadPdf(Long id);
 
-    void InsertCategories();
+    void insertcategories();
 }

@@ -39,16 +39,9 @@ public class ReviewServiceTests {
 	
 	@Mock
     private UserRepository userRepository;
-	
-	@Mock
-	private ImageRepository imageRepository;
 
 	@InjectMocks
 	private ReviewService reviewService;
-
-	@InjectMocks
-	TokenService tokenService;
-
 
 	@Test
 	void TestCheckIfUserIsNotAuthorized() {
@@ -56,7 +49,7 @@ public class ReviewServiceTests {
     	when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(GetReview(4)));
 
-    	assertFalse(reviewService.CheckIfUserIsAuthorized(GetReview(4)));
+    	assertFalse(reviewService.checkIfUserIsAuthorized(GetReview(4)));
 	}
 	
 	@Test
@@ -66,7 +59,7 @@ public class ReviewServiceTests {
     	when(userRepository.findById(1)).thenReturn(Optional.of(user));
     	when(reviewRepository.findById(1L)).thenReturn(Optional.of(GetReview(0)));
 
-    	assertTrue(reviewService.CheckIfUserIsAuthorized(GetReview(0)));
+    	assertTrue(reviewService.checkIfUserIsAuthorized(GetReview(0)));
 	}
 
     @Test 
@@ -76,7 +69,7 @@ public class ReviewServiceTests {
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
         when(recipeRepository.findById(1L)).thenReturn(Optional.of(new Recipe()));
         
-        var result = reviewService.InsertReview(collection, GetReview(0));
+        var result = reviewService.insertReview(collection, GetReview(0));
         
         assertFalse(collection.HasErrors());
         assertTrue(result.getStatusCode().is2xxSuccessful());
@@ -88,7 +81,7 @@ public class ReviewServiceTests {
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(GetReview(0)));
         when(recipeRepository.findById(1L)).thenReturn(Optional.empty());
         
-        var result = reviewService.InsertReview(collection, GetReview(0));
+        var result = reviewService.insertReview(collection, GetReview(0));
 
         assertTrue(collection.HasErrors());
         assertEquals(result, null);
@@ -104,7 +97,7 @@ public class ReviewServiceTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(GetReview(0)));
 
-        var result = reviewService.UpdateReview(collection, updateModel);
+        var result = reviewService.updateReview(collection, updateModel);
 
         assertTrue(result.getStatusCode().is2xxSuccessful());
     }
@@ -119,7 +112,7 @@ public class ReviewServiceTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
 
-        reviewService.UpdateReview(collection, updateModel);
+        reviewService.updateReview(collection, updateModel);
 
         assertTrue(collection.HasErrors());
     }
@@ -133,7 +126,7 @@ public class ReviewServiceTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(GetReview(0)));
 
-        reviewService.DeleteReview(collection, GetReview(0).id);
+        reviewService.deleteReview(collection, GetReview(0).id);
 
         assertFalse(collection.HasErrors());
     }
@@ -147,7 +140,7 @@ public class ReviewServiceTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
 
-        reviewService.DeleteReview(collection, GetReview(0).id);
+        reviewService.deleteReview(collection, GetReview(0).id);
 
         assertTrue(collection.HasErrors());
     }
@@ -158,7 +151,7 @@ public class ReviewServiceTests {
         NotificationCollector collection = new NotificationCollector();
         
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
-        var result = reviewService.GetReviewById(collection, review.id);
+        var result = reviewService.getReviewById(collection, review.id);
 
         assertFalse(collection.HasErrors());
         assertTrue(result.getStatusCode().is2xxSuccessful());
@@ -170,7 +163,7 @@ public class ReviewServiceTests {
         NotificationCollector collection = new NotificationCollector();
         
         when(reviewRepository.findById(1L)).thenReturn(Optional.empty());
-        var result = reviewService.GetReviewById(collection, review.id);
+        var result = reviewService.getReviewById(collection, review.id);
 
         assertTrue(collection.HasErrors());
         assertTrue(result == null);

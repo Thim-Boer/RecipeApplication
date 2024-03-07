@@ -64,7 +64,7 @@ public class RecipeTests {
 
 		when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
-		assertFalse(recipeService.CheckIfUserIsAuthorized(GetRecipe(0)));
+		assertFalse(recipeService.checkIfUserIsAuthorized(GetRecipe(0)));
 	}
 
 	@Test
@@ -72,7 +72,7 @@ public class RecipeTests {
 		var user = SetAuthentication(Role.ADMIN);
 		when(userRepository.findById(1)).thenReturn(Optional.of(user));
 
-		assertTrue(recipeService.CheckIfUserIsAuthorized(GetRecipe(0)));
+		assertTrue(recipeService.checkIfUserIsAuthorized(GetRecipe(0)));
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class RecipeTests {
 		var recipe = GetRecipe(0);
 		when(recipeRepository.findByNameContainingIgnoreCase(anyString())).thenReturn(new ArrayList<>());
 		when(recipeRepository.save(any(Recipe.class))).thenReturn(recipe);
-		recipeService.InsertRecipe(recipe);
+		recipeService.insertRecipe(recipe);
 
 		Mockito.verify(recipeRepository).save(recipe);
 	}
@@ -116,7 +116,7 @@ public class RecipeTests {
 		list.add(recipe);
 
 		when(recipeRepository.findByNameContainingIgnoreCase(anyString())).thenReturn(list);
-		ResponseEntity<?> response = recipeService.InsertRecipe(recipe);
+		ResponseEntity<?> response = recipeService.insertRecipe(recipe);
 
 		assertEquals(response, ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists));
 	}
@@ -141,7 +141,7 @@ public class RecipeTests {
 		MultipartFile multipartFile = new MockMultipartFile("file", "filename.txt", "text/plain", fileContent);
 		file.SetFile(multipartFile);
 
-		ResponseEntity<?> responseEntity = recipeService.UploadImage(file);
+		ResponseEntity<?> responseEntity = recipeService.uploadImage(file);
 
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		verify(imageRepository, times(1)).save(any());
@@ -151,7 +151,7 @@ public class RecipeTests {
 	void TestUploadImageFailure() {
 		UploadDto file = new UploadDto(null, null, null);
 
-		ResponseEntity<?> responseEntity = recipeService.UploadImage(file);
+		ResponseEntity<?> responseEntity = recipeService.uploadImage(file);
 
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals(RecipeErrorCodes.CannotBeUploaded, responseEntity.getBody());
@@ -167,7 +167,7 @@ public class RecipeTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(recipeRepository.findById(1L)).thenReturn(Optional.of(GetRecipe(0)));
 
-        recipeService.UpdateRecipe(collection, updateRecipeModel);
+        recipeService.updateRecipe(collection, updateRecipeModel);
 
         assertFalse(collection.HasErrors());
     }
@@ -182,7 +182,7 @@ public class RecipeTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(recipeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        recipeService.UpdateRecipe(collection, updateRecipeModel);
+        recipeService.updateRecipe(collection, updateRecipeModel);
 
         assertTrue(collection.HasErrors());
     }
@@ -196,7 +196,7 @@ public class RecipeTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(recipeRepository.findById(1L)).thenReturn(Optional.of(GetRecipe(0)));
 
-        recipeService.DeleteRecipe(collection, GetRecipe(0).id);
+        recipeService.deleteRecipe(collection, GetRecipe(0).id);
 
         assertFalse(collection.HasErrors());
     }
@@ -210,7 +210,7 @@ public class RecipeTests {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(recipeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        recipeService.DeleteRecipe(collection, GetRecipe(0).id);
+        recipeService.deleteRecipe(collection, GetRecipe(0).id);
 
         assertTrue(collection.HasErrors());
     }
@@ -220,7 +220,7 @@ public class RecipeTests {
 		Image mockImage = new Image(1L, GetRecipe(0), "base64Image");
 		
 		when(imageRepository.findById(1L)).thenReturn(Optional.of(mockImage));
-		Optional<Image> image = recipeService.GetImage();
+		Optional<Image> image = recipeService.getImage();
 
 		assertEquals(mockImage, image.orElse(null));
 	}
@@ -230,8 +230,8 @@ public class RecipeTests {
 		NotificationCollector collection = new NotificationCollector();
 
 		when(recipeRepository.findById(1l)).thenReturn(Optional.of(GetRecipe(0)));
-		when(recipeService.GetRecipeById(collection, 1L)).thenReturn(Optional.of(GetRecipe(0)));
-		var result = recipeService.DownloadPdf(1L);
+		when(recipeService.getRecipeById(collection, 1L)).thenReturn(Optional.of(GetRecipe(0)));
+		var result = recipeService.downloadPdf(1L);
 
 		assertEquals(result.getStatusCode(), HttpStatus.OK);
 		assertFalse(collection.HasErrors());
@@ -240,8 +240,8 @@ public class RecipeTests {
 	@Test
 	void TestDownloadPdfFailure() {
 		NotificationCollector collection = new NotificationCollector();
-		when(recipeService.GetRecipeById(collection, 1L)).thenReturn(Optional.empty());
-		recipeService.DownloadPdf(1L);
+		when(recipeService.getRecipeById(collection, 1L)).thenReturn(Optional.empty());
+		recipeService.downloadPdf(1L);
 
 		assertTrue(collection.HasErrors());
 	}

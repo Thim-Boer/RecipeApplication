@@ -3,7 +3,6 @@ package recipeapplication.application.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import recipeapplication.application.exceptions.NotificationCollector;
@@ -18,57 +17,57 @@ import java.util.List;
 @RequestMapping("/api/recipes")
 @RestController
 public class RecipeController {
-    private IRecipeService recipeService;
+    private final IRecipeService recipeService;
 
     @Autowired
     public RecipeController(IRecipeService recipeService) {
         this.recipeService = recipeService;
     }
 
-    @PostMapping("/addRecipe")
-    public ResponseEntity<?> AddRecipeToList(@RequestBody Recipe recipe) {
-        return recipeService.InsertRecipe(recipe);
+    @PostMapping("/recipe")
+    public ResponseEntity<?> addRecipeToList(@RequestBody Recipe recipe) {
+        return recipeService.insertRecipe(recipe);
     }
 
-    @PutMapping("/updateRecipe")
-    public ResponseEntity<?> ChangeRecipe(@RequestBody UpdateRecipeModel updateModel) {
+    @PutMapping("/recipe")
+    public ResponseEntity<?> changeRecipe(@RequestBody UpdateRecipeModel updateModel) {
         NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.UpdateRecipe(collection, updateModel);
+        var result = recipeService.updateRecipe(collection, updateModel);
         if (collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         }
         return result;
     }
 
-    @GetMapping("/searchRecipes")
-    public List<Recipe> GetAllRecipes() {
-        return recipeService.GetAllRecipes();
+    @GetMapping("/recipes")
+    public List<Recipe> getAllRecipes() {
+        return recipeService.getAllRecipes();
     }
 
-    @GetMapping("/searchRecipeById/{id}")
-    public ResponseEntity<?> GetRecipeById(@PathVariable Long id) {
+    @GetMapping("/recipe/{id}")
+    public ResponseEntity<?> getRecipeById(@PathVariable Long id) {
         NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.GetRecipeById(collection, id);
+        var result = recipeService.getRecipeById(collection, id);
         if (collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         }
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<?> HandleFileUpload(@ModelAttribute UploadDto file) {
-        return this.recipeService.UploadImage(file);
+    @PostMapping("/recipe/{id}/document")
+    public ResponseEntity<?> handleFileUpload(@ModelAttribute UploadDto file) {
+        return this.recipeService.uploadImage(file);
     }
 
-    @GetMapping("/downloadImage")
-    public ResponseEntity<?> DownloadPdf(@PathVariable Long id) {
-        return this.recipeService.DownloadPdf(id);
+    @GetMapping("/recipe/{id}/pdf")
+    public ResponseEntity<?> downloadPdf(@PathVariable Long id) {
+        return this.recipeService.downloadPdf(id);
     }
 
-    @GetMapping("/searchRecipeByName/{searchterm}")
-    public ResponseEntity<?> GetRecipeByName(@PathVariable String searchterm) {
+    @GetMapping("/recipe?searchterm={searchterm}")
+    public ResponseEntity<?> getRecipeByName(@PathVariable String searchterm) {
         NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.GetRecipeByName(collection, searchterm);
+        var result = recipeService.getRecipeByName(collection, searchterm);
 
         if (collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
@@ -76,11 +75,11 @@ public class RecipeController {
         return ResponseEntity.ok().body(result);
     }
 
-    @DeleteMapping("/deleteRecipe/{id}")
-    public ResponseEntity<?> DeleteRecipe(@PathVariable Long id) {
+    @DeleteMapping("/recipe/{id}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable Long id) {
         NotificationCollector collection = new NotificationCollector();
 
-        var result = recipeService.DeleteRecipe(collection, id);
+        var result = recipeService.deleteRecipe(collection, id);
         if (collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         }

@@ -51,7 +51,7 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public boolean CheckIfUserIsAuthorized(Recipe recipe) {
+    public boolean checkIfUserIsAuthorized(Recipe recipe) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;
         var foundUser = userRepository.findById(userDetails.getId());
@@ -72,7 +72,7 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> InsertRecipe(Recipe recipe) {
+    public ResponseEntity<?> insertRecipe(Recipe recipe) {
         if (!recipeRepository.findByNameContainingIgnoreCase(recipe.name).isEmpty()) {
             return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
         }
@@ -83,12 +83,12 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public List<Recipe> GetAllRecipes() {
+    public List<Recipe> getAllRecipes() {
         return recipeRepository.findAll();
     }
 
     @Override
-    public Optional<Recipe> GetRecipeById(NotificationCollector collection, Long id) {
+    public Optional<Recipe> getRecipeById(NotificationCollector collection, Long id) {
         var result = recipeRepository.findById(id);
         if (!result.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
@@ -97,7 +97,7 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public List<Recipe> GetRecipeByName(NotificationCollector collection, String searchterm) {
+    public List<Recipe> getRecipeByName(NotificationCollector collection, String searchterm) {
         var result = recipeRepository.findByNameContainingIgnoreCase(searchterm);
         if (result.isEmpty()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
@@ -106,9 +106,9 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> UpdateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
+    public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
         var orginalRecipe = recipes.GetOriginal();
-        if (!CheckIfUserIsAuthorized(orginalRecipe)) {
+        if (!checkIfUserIsAuthorized(orginalRecipe)) {
             collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
         }
         if (!recipes.DoIdsMatch()) {
@@ -126,13 +126,13 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> DeleteRecipe(NotificationCollector collection, Long id) {
+    public ResponseEntity<?> deleteRecipe(NotificationCollector collection, Long id) {
         var foundRecipe = recipeRepository.findById(id);
         if (!foundRecipe.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
             return null;
         }
-        if (!CheckIfUserIsAuthorized(foundRecipe.get())) {
+        if (!checkIfUserIsAuthorized(foundRecipe.get())) {
             collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
         }
         if (collection.HasErrors()) {
@@ -143,7 +143,7 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public ResponseEntity<?> UploadImage(UploadDto file) {
+    public ResponseEntity<?> uploadImage(UploadDto file) {
         try {
             byte[] fileBytes = file.image.getBytes();
             String base64Image = Base64.getEncoder().encodeToString(fileBytes);
@@ -156,19 +156,19 @@ public class RecipeService implements IRecipeService {
     }
     
     @Override
-    public Optional<Image> GetImage() {
+    public Optional<Image> getImage() {
         return imageRepository.findById(1L);
     }
     
     @Override
-    public ResponseEntity<?> DownloadPdf(Long id) {
-        Optional<Recipe> foundRecipeResponse = GetRecipeById(new NotificationCollector(), id);
+    public ResponseEntity<?> downloadPdf(Long id) {
+        Optional<Recipe> foundRecipeResponse = getRecipeById(new NotificationCollector(), id);
         
         if (foundRecipeResponse.isPresent()) {
             var recipe = foundRecipeResponse.get();
-            String pdfContent = BuildPdfContent(recipe);
+            String pdfContent = buildPdfContent(recipe);
             
-            ByteArrayOutputStream pdfStream = GeneratePdf(pdfContent);
+            ByteArrayOutputStream pdfStream = generatePdf(pdfContent);
             
             if (pdfStream != null) {
                 HttpHeaders headers = new HttpHeaders();
@@ -187,7 +187,7 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public void InsertCategories() {
+    public void insertcategories() {
         Category[] categories = {
                     new Category("Voorgerechten"),
                     new Category("Hoofdgerechten"),
@@ -215,7 +215,7 @@ public class RecipeService implements IRecipeService {
                 }
     }
     
-    private String BuildPdfContent(Recipe recipe) {
+    private String buildPdfContent(Recipe recipe) {
         StringBuilder contentBuilder = new StringBuilder();
         contentBuilder.append(recipe.name).append("\n\n")
                 .append("Allergies: ").append(recipe.allergies).append("\n")
@@ -238,7 +238,7 @@ public class RecipeService implements IRecipeService {
         return contentBuilder.toString();
     }
 
-    private ByteArrayOutputStream GeneratePdf(String content) {
+    private ByteArrayOutputStream generatePdf(String content) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             Document document = new Document();

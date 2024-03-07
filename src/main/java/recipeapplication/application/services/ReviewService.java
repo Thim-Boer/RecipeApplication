@@ -17,19 +17,19 @@ import recipeapplication.application.repository.UserRepository;
 
 @Service
 public class ReviewService implements IReviewService {
-    private ReviewRepository reviewRepository;
-    private RecipeRepository recipeRepository;
-    private UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
+    private final RecipeRepository recipeRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, RecipeRepository recipeRepository) {
+    ReviewService(UserRepository userRepository, ReviewRepository reviewRepository, RecipeRepository recipeRepository) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
     }
 
     @Override
-    public boolean CheckIfUserIsAuthorized(Review review) {
+    public boolean checkIfUserIsAuthorized(Review review) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User userDetails = (User) principal;
         var foundUser = userRepository.findById(userDetails.getId());
@@ -53,7 +53,7 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public ResponseEntity<?> InsertReview(NotificationCollector collection, Review review) {
+    public ResponseEntity<?> insertReview(NotificationCollector collection, Review review) {
         if (reviewRepository.findById(review.id).isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataAlreadyExists);
         }
@@ -70,7 +70,7 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public ResponseEntity<?> UpdateReview(NotificationCollector collection, UpdateReviewModel reviews) {
+    public ResponseEntity<?> updateReview(NotificationCollector collection, UpdateReviewModel reviews) {
         var orginalReview = reviews.GetOriginal();
         if (!reviews.DoIdsMatch()) {
             collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch);
@@ -81,7 +81,7 @@ public class ReviewService implements IReviewService {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
             return null;
         }
-        if(!CheckIfUserIsAuthorized(review.get())) {
+        if(!checkIfUserIsAuthorized(review.get())) {
             collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
         }
         if (collection.HasErrors()) {
@@ -92,14 +92,14 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public ResponseEntity<?> DeleteReview(NotificationCollector collection, Long id) {
+    public ResponseEntity<?> deleteReview(NotificationCollector collection, Long id) {
         var foundReview = reviewRepository.findById(id);
         if(!foundReview.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
             return null;
         }
 
-        if(!CheckIfUserIsAuthorized(foundReview.get())) {
+        if(!checkIfUserIsAuthorized(foundReview.get())) {
             collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
         }
         if(collection.HasErrors()) {
@@ -110,7 +110,7 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public ResponseEntity<?> GetReviewById(NotificationCollector collection, Long id) {
+    public ResponseEntity<?> getReviewById(NotificationCollector collection, Long id) {
         var foundReview = reviewRepository.findById(id);
         if(!foundReview.isPresent()) {
             collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);

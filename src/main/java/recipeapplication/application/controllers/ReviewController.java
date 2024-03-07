@@ -2,7 +2,6 @@ package recipeapplication.application.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,17 +14,17 @@ import recipeapplication.application.services.IReviewService;
 @RequestMapping("/api/review")
 @RestController
 public class ReviewController {
-private IReviewService reviewService;
+private final IReviewService reviewService;
     
     @Autowired
     public ReviewController(IReviewService reviewService) {
         this.reviewService = reviewService;
     }
 
-    @GetMapping("/getReviewById/{id}")
-    public ResponseEntity<?> GetReviewById(@PathVariable Long id) {
+    @GetMapping("/review/{id}")
+    public ResponseEntity<?> getReviewById(@PathVariable Long id) {
         NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.GetReviewById(collection, id);
+        var result = reviewService.getReviewById(collection, id);
         if(collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         } else {
@@ -33,32 +32,30 @@ private IReviewService reviewService;
         }
     }
 
-    @PostMapping("/addReview")
-    public ResponseEntity<?> AddReviewToReview(@RequestBody Review review) {
+    @PostMapping("/review")
+    public ResponseEntity<?> addReviewToReview(@RequestBody Review review) {
         NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.InsertReview(collection, review);
+        var result = reviewService.insertReview(collection, review);
         if(collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         } 
         return result;
     }
     
-    @PutMapping("/updateReview")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
-    public ResponseEntity<?> ChangeReview(@RequestBody UpdateReviewModel updateModel) {
+    @PutMapping("/review")
+    public ResponseEntity<?> changeReview(@RequestBody UpdateReviewModel updateModel) {
         NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.UpdateReview(collection, updateModel);
+        var result = reviewService.updateReview(collection, updateModel);
         if(collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         } 
         return result;
     }
     
-    @DeleteMapping("/deleteReview/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
-    public ResponseEntity<?> DeleteReview(@PathVariable Long id) {
+    @DeleteMapping("/review/{id}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
         NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.DeleteReview(collection, id);
+        var result = reviewService.deleteReview(collection, id);
         if(collection.HasErrors()) {
             return ResponseEntity.badRequest().body(collection.ReturnErrors());
         } 
