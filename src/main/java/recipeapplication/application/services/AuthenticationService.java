@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.exceptions.EntityIsNotUniqueException;
 import recipeapplication.application.models.Role;
 import recipeapplication.application.models.Token;
 import recipeapplication.application.models.TokenType;
@@ -25,7 +26,7 @@ public class AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final TokenService jwtService;
   private final AuthenticationManager authenticationManager;
-  public ResponseEntity<?> register(SignUpRequest request) {
+  public User register(SignUpRequest request) {
     var user = User.builder()
         .firstname(request.getFirstname())
         .lastname(request.getLastname())
@@ -34,12 +35,12 @@ public class AuthenticationService {
         .role(Role.USER)
         .build();
     if(repository.findByEmail(request.getEmail().toLowerCase()).isPresent()) {
-      return ResponseEntity.unprocessableEntity().build();
+      throw new EntityIsNotUniqueException("Er bestaat al een account met dit emailadres");
     }
     var savedUser = repository.save(user);
     var accessToken = jwtService.generateToken(user);
     saveUserToken(savedUser, accessToken);
-    return ResponseEntity.ok("Gebruiker geregistreerd.");
+    return savedUser;
   }
 
   public AuthenticationResponse authenticate(SignInRequest request) {

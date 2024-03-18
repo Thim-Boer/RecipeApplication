@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import recipeapplication.application.exceptions.RecipeErrorCodes;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
 import recipeapplication.application.services.AuthenticationService;
 import lombok.RequiredArgsConstructor;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,11 +26,12 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
-        var register = ResponseEntity.ok(authenticationService.register(request));
-        if (register.getBody().getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.ok(register.getBody());
-        }
-        return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
+        var result= authenticationService.register(request);
+        URI uri = URI.create(
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/" + result.getId()).toUriString());
+        return ResponseEntity.created(uri).body("Gebruiker aangemaakt");
     }
     
     @PostMapping("/signin") 

@@ -20,11 +20,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import recipeapplication.application.exceptions.NotificationCollector;
-import recipeapplication.application.exceptions.RecipeErrorCodes;
+
 import recipeapplication.application.dto.UpdateRecipeModel;
 import recipeapplication.application.dto.UploadDto;
-import recipeapplication.application.models.Category;
+import recipeapplication.application.exceptions.EntityIsNotUniqueException;
+import recipeapplication.application.exceptions.IdentifiersDoNotMatchException;
+import recipeapplication.application.exceptions.RecordNotFoundException;
+import recipeapplication.application.exceptions.UserIsNotAuthorizedException;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.User;
@@ -33,21 +35,20 @@ import recipeapplication.application.repository.UserRepository;
 import recipeapplication.application.repository.CategoryRepository;
 import recipeapplication.application.repository.ImageRepository;
 
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 public class RecipeService implements IRecipeService {
 
     private final RecipeRepository recipeRepository;
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
 
     @Autowired
     public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository,
-            UserRepository userRepository, CategoryRepository categoryRepository) {
+            UserRepository userRepository) {
         this.recipeRepository = recipeRepository;
         this.imageRepository = imageRepository;
         this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
     }
 
     @Override
@@ -57,29 +58,26 @@ public class RecipeService implements IRecipeService {
         var foundUser = userRepository.findById(userDetails.getId());
         var userRole = userDetails.getRole().name();
 
-        if (!foundUser.isPresent()) {
+        if (foundUser.isEmpty()) {
             return false;
         } else {
             if (!foundUser.get().getId().equals(recipe.userId)) {
-                if (userRole.equals("ADMIN")) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return userRole.equals("ADMIN");
             }
             return true;
         }
     }
 
     @Override
-    public ResponseEntity<?> insertRecipe(Recipe recipe) {
+    public Recipe insertRecipe(Recipe recipe) {
         if (!recipeRepository.findByNameContainingIgnoreCase(recipe.name).isEmpty()) {
-            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataAlreadyExists);
+            throw new EntityIsNotUniqueException("Er bestaat al een recept met deze naam: " + recipe.name);
         }
+
         User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         recipe.userId = user.getId();
         recipeRepository.save(recipe);
-        return ResponseEntity.ok().build();
+        return recipe;
     }
 
     @Override
@@ -88,71 +86,69 @@ public class RecipeService implements IRecipeService {
     }
 
     @Override
-    public Optional<Recipe> getRecipeById(NotificationCollector collection, Long id) {
+    public Optional<Recipe> getRecipeById(Long id) {
         var result = recipeRepository.findById(id);
-        if (!result.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+        if (result.isEmpty()) {
+            throw new RecordNotFoundException("Het recept met de identifier: "+id+" is niet gevonden");
         }
+
         return result;
     }
 
     @Override
-    public List<Recipe> getRecipeByName(NotificationCollector collection, String searchterm) {
+    public List<Recipe> getRecipeByName(String searchterm) {
         var result = recipeRepository.findByNameContainingIgnoreCase(searchterm);
         if (result.isEmpty()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
+            throw new RecordNotFoundException("Het recept met de naam: "+ searchterm + " is niet gevonden");
         }
+
         return result;
     }
 
     @Override
-    public ResponseEntity<?> updateRecipe(NotificationCollector collection, UpdateRecipeModel recipes) {
+    public Recipe updateRecipe(UpdateRecipeModel recipes) {
         var orginalRecipe = recipes.GetOriginal();
         if (!checkIfUserIsAuthorized(orginalRecipe)) {
-            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+            throw new UserIsNotAuthorizedException("Je hebt geen rechten om dit recept: " + orginalRecipe + " te updaten");
         }
         if (!recipes.DoIdsMatch()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch);
+            throw new IdentifiersDoNotMatchException("De opgegeven identifiers komen niet overeen");
         }
+
         var recipe = recipeRepository.findById(orginalRecipe.id);
-        if (!recipe.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-        }
-        if (collection.HasErrors()) {
-            return null;
+
+        if(recipe.isEmpty()) {
+            throw new RecordNotFoundException("Het recept met de identifier: " + orginalRecipe.id + " is niet gevonden");
         }
         recipeRepository.save(recipes.GetUpdated());
-        return ResponseEntity.ok().build();
+        return recipe.get();
     }
 
     @Override
-    public ResponseEntity<?> deleteRecipe(NotificationCollector collection, Long id) {
+    public Recipe deleteRecipe(Long id) {
         var foundRecipe = recipeRepository.findById(id);
-        if (!foundRecipe.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-            return null;
+        if(foundRecipe.isEmpty()) {
+            throw new RecordNotFoundException("Het recept met de identifier: "+id+" is niet gevonden");
         }
         if (!checkIfUserIsAuthorized(foundRecipe.get())) {
-            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
-        }
-        if (collection.HasErrors()) {
-            return null;
+            throw new UserIsNotAuthorizedException("Je hebt geen rechten om dit recept te verwijderen");
         }
         recipeRepository.delete(foundRecipe.get());
-        return ResponseEntity.ok().build();
+        return foundRecipe.get();
     }
 
     @Override
-    public ResponseEntity<?> uploadImage(UploadDto file) {
+    public Image uploadImage(UploadDto file) {
         try {
             byte[] fileBytes = file.image.getBytes();
             String base64Image = Base64.getEncoder().encodeToString(fileBytes);
             Image image = new Image(file.GetId(), file.GetRecipe(), base64Image);
             imageRepository.save(image);
+            return image;
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(RecipeErrorCodes.CannotBeUploaded);
+            return null;
+//            return ResponseEntity.badRequest().body(RecipeErrorCodes.CannotBeUploaded);
         }
-        return ResponseEntity.ok().build();
     }
     
     @Override
@@ -161,8 +157,8 @@ public class RecipeService implements IRecipeService {
     }
     
     @Override
-    public ResponseEntity<?> downloadPdf(Long id) {
-        Optional<Recipe> foundRecipeResponse = getRecipeById(new NotificationCollector(), id);
+    public byte[] downloadPdf(Long id) {
+        Optional<Recipe> foundRecipeResponse = getRecipeById(id);
         
         if (foundRecipeResponse.isPresent()) {
             var recipe = foundRecipeResponse.get();
@@ -177,43 +173,46 @@ public class RecipeService implements IRecipeService {
                 
                 headers.setContentLength(pdfStream.size());
                 
-                return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
+                return pdfStream.toByteArray();
             }
-        } else{
-            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
+//            else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating PDF");
+//            }
+//        } else{
+////            return ResponseEntity.badRequest().body(RecipeErrorCodes.DataNotFound);
+//        }
         }
+            return null;
     }
 
-    @Override
-    public void insertcategories() {
-        Category[] categories = {
-                    new Category("Voorgerechten"),
-                    new Category("Hoofdgerechten"),
-                    new Category("Bijgerechten"),
-                    new Category("Salades"),
-                    new Category("Soepen"),
-                    new Category("Vegetarisch"),
-                    new Category("Veganistisch"),
-                    new Category("Glutenvrij"),
-                    new Category("Desserts"),
-                    new Category("Bakken"),
-                    new Category("Dranken"),
-                    new Category("Smoothies"),
-                    new Category("Internationale keuken"),
-                    new Category("Snacks"),
-                    new Category("Gezonde recepten"),
-                    new Category("Feestelijke gerechten"),
-                    new Category("Snel en makkelijk"),
-                    new Category("Budgetvriendelijk"),
-                    new Category("Seizoensgebonden gerechten"),
-                    new Category("Kinderrecepten")
-                };
-                for (Category category : categories) {
-                    categoryRepository.save(category);
-                }
-    }
+//    @Override
+//    public void insertcategories() {
+//        Category[] categories = {
+//                    new Category("Voorgerechten"),
+//                    new Category("Hoofdgerechten"),
+//                    new Category("Bijgerechten"),
+//                    new Category("Salades"),
+//                    new Category("Soepen"),
+//                    new Category("Vegetarisch"),
+//                    new Category("Veganistisch"),
+//                    new Category("Glutenvrij"),
+//                    new Category("Desserts"),
+//                    new Category("Bakken"),
+//                    new Category("Dranken"),
+//                    new Category("Smoothies"),
+//                    new Category("Internationale keuken"),
+//                    new Category("Snacks"),
+//                    new Category("Gezonde recepten"),
+//                    new Category("Feestelijke gerechten"),
+//                    new Category("Snel en makkelijk"),
+//                    new Category("Budgetvriendelijk"),
+//                    new Category("Seizoensgebonden gerechten"),
+//                    new Category("Kinderrecepten")
+//                };
+//                for (Category category : categories) {
+//                    categoryRepository.save(category);
+//                }
+//    }
     
     private String buildPdfContent(Recipe recipe) {
         StringBuilder contentBuilder = new StringBuilder();
@@ -226,13 +225,13 @@ public class RecipeService implements IRecipeService {
         contentBuilder.append("\n\nIngredients:\n\n");
         String[] ingredients = recipe.ingredients.split("\\,");
         for (String ingredient : ingredients) {
-            contentBuilder.append("* " + ingredient.trim()).append("\n");
+            contentBuilder.append("* ").append(ingredient.trim()).append("\n");
         }
 
         contentBuilder.append("\nInstructions: \n\n");
         String[] instructions = recipe.instructions.split("\\.");
         for (String instruction : instructions) {
-            contentBuilder.append("*  " + instruction.trim()).append("\n");
+            contentBuilder.append("*  ").append(instruction.trim()).append("\n");
         }
 
         return contentBuilder.toString();

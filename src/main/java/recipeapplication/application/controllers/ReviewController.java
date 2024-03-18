@@ -5,10 +5,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import recipeapplication.application.dto.UpdateReviewModel;
-import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.models.Review;
 import recipeapplication.application.services.IReviewService;
+
+import java.net.URI;
 
 @Controller
 @RequestMapping("/api/review")
@@ -23,42 +25,32 @@ private final IReviewService reviewService;
 
     @GetMapping("/review/{id}")
     public ResponseEntity<?> getReviewById(@PathVariable Long id) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.getReviewById(collection, id);
-        if(collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        } else {
-            return result;
-        }
+        var result = reviewService.getReviewById(id);
+        return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/review")
     public ResponseEntity<?> addReviewToReview(@RequestBody Review review) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.insertReview(collection, review);
-        if(collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        } 
-        return result;
+        var result = reviewService.insertReview(review);
+        URI uri = URI.create(
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/" + result.id).toUriString());
+
+        return ResponseEntity.created(uri).body(result);
     }
     
     @PutMapping("/review")
     public ResponseEntity<?> changeReview(@RequestBody UpdateReviewModel updateModel) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.updateReview(collection, updateModel);
-        if(collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        } 
-        return result;
+        var result = reviewService.updateReview(updateModel);
+
+        return ResponseEntity.ok().body(result);
     }
     
     @DeleteMapping("/review/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable Long id) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = reviewService.deleteReview(collection, id);
-        if(collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        } 
-        return result;
+        var result = reviewService.deleteReview(id);
+
+        return ResponseEntity.ok().body(result);
     }
 }

@@ -1,31 +1,28 @@
 package recipeapplication.application.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import recipeapplication.application.dto.UpdateReviewModel;
-import recipeapplication.application.exceptions.NotificationCollector;
-import recipeapplication.application.exceptions.RecipeErrorCodes;
+import recipeapplication.application.exceptions.EntityIsNotUniqueException;
+import recipeapplication.application.exceptions.IdentifiersDoNotMatchException;
+import recipeapplication.application.exceptions.RecordNotFoundException;
+import recipeapplication.application.exceptions.UserIsNotAuthorizedException;
 import recipeapplication.application.models.Review;
 import recipeapplication.application.models.Role;
 import recipeapplication.application.models.User;
-import recipeapplication.application.repository.RecipeRepository;
 import recipeapplication.application.repository.ReviewRepository;
 import recipeapplication.application.repository.UserRepository;
 
 @Service
 public class ReviewService implements IReviewService {
     private final ReviewRepository reviewRepository;
-    private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    ReviewService(UserRepository userRepository, ReviewRepository reviewRepository, RecipeRepository recipeRepository) {
+    ReviewService(UserRepository userRepository, ReviewRepository reviewRepository) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
-        this.recipeRepository = recipeRepository;
     }
 
     @Override
@@ -35,88 +32,75 @@ public class ReviewService implements IReviewService {
         var foundUser = userRepository.findById(userDetails.getId());
         var userRole = userDetails.getRole();
         var foundReview = reviewRepository.findById(review.id);
-        if(!foundReview.isPresent()) {
+        if(foundReview.isEmpty()) {
             return false;
         }
-        if (!foundUser.isPresent()) {
+        if (foundUser.isEmpty()) {
             return false;
         } else {
             if (!foundUser.get().getId().equals(foundReview.get().userId)) {
-                if (userRole.equals(Role.ADMIN)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return userRole.equals(Role.ADMIN);
             }
             return true;
         }
     }
 
     @Override
-    public ResponseEntity<?> insertReview(NotificationCollector collection, Review review) {
+    public Review insertReview(Review review) {
+
         if (reviewRepository.findById(review.id).isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataAlreadyExists);
+            throw new EntityIsNotUniqueException("Er bestaat al een review met de identifier: " + review.id);
         }
-        if (recipeRepository.findById(review.recipeId).isEmpty()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-        }
-        if (collection.HasErrors()) {
-            return null;
-        }
+
         var user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         review.userId = user.getId();
         reviewRepository.save(review);
-        return ResponseEntity.ok().body("De review is aangemaakt");
+        return review;
     }
 
     @Override
-    public ResponseEntity<?> updateReview(NotificationCollector collection, UpdateReviewModel reviews) {
+    public Review updateReview(UpdateReviewModel reviews) {
         var orginalReview = reviews.GetOriginal();
         if (!reviews.DoIdsMatch()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.IdsDonotMatch);
+            throw new IdentifiersDoNotMatchException("De identifier komen niet overen");
         }
+
         var review = reviewRepository.findById(orginalReview.id);
         
-        if (!review.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-            return null;
+        if (review.isEmpty()) {
+            throw new RecordNotFoundException("De review met de identifier: " + orginalReview.id + " is niet gevonden");
         }
+
         if(!checkIfUserIsAuthorized(review.get())) {
-            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+            throw new UserIsNotAuthorizedException("Je hebt geen rechten om deze review aan te passen");
         }
-        if (collection.HasErrors()) {
-            return null;
-        }
+
         reviewRepository.save(reviews.GetUpdated());
-        return ResponseEntity.ok().build();
+        return reviews.GetUpdated();
     }
 
     @Override
-    public ResponseEntity<?> deleteReview(NotificationCollector collection, Long id) {
+    public Review deleteReview(Long id) {
         var foundReview = reviewRepository.findById(id);
-        if(!foundReview.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-            return null;
+        if(foundReview.isEmpty()) {
+            throw new RecordNotFoundException("De review met de identifier: " + id + " is niet gevonden");
         }
 
         if(!checkIfUserIsAuthorized(foundReview.get())) {
-            collection.AddErrorToCollection(RecipeErrorCodes.NotAuthorized);
+            throw new UserIsNotAuthorizedException("Je hebt geen rechten om deze review te verwijderen");
         }
-        if(collection.HasErrors()) {
-            return null;
-        }
+
         reviewRepository.delete(foundReview.get());
-        return ResponseEntity.ok().build();
+        return foundReview.get();
     }
 
     @Override
-    public ResponseEntity<?> getReviewById(NotificationCollector collection, Long id) {
+    public Review getReviewById(Long id) {
         var foundReview = reviewRepository.findById(id);
-        if(!foundReview.isPresent()) {
-            collection.AddErrorToCollection(RecipeErrorCodes.DataNotFound);
-            return null;
+        if(foundReview.isEmpty()) {
+          throw new RecordNotFoundException("De review met de identifier: " + id + " is niet gevonden");
         }
-        
-        return ResponseEntity.ok().body(foundReview.get());
+
+        return foundReview.get();
     }
 }
