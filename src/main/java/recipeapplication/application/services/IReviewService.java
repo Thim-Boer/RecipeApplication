@@ -3,17 +3,16 @@ package recipeapplication.application.services;
 import org.springframework.http.ResponseEntity;
 
 import recipeapplication.application.dto.UpdateReviewModel;
-import recipeapplication.application.exceptions.NotificationCollector;
 import recipeapplication.application.models.Review;
 
 public interface IReviewService {
     boolean checkIfUserIsAuthorized(Review review);
 
-    ResponseEntity<?> getReviewById(NotificationCollector collection, Long id);
+    Review getReviewById(Long id);
 
-    ResponseEntity<?> insertReview(NotificationCollector collection, Review review);
+    Review insertReview(Review review);
 
-    ResponseEntity<?> updateReview(NotificationCollector collection, UpdateReviewModel review);
+    Review updateReview(UpdateReviewModel review);
 
-    ResponseEntity<?> deleteReview(NotificationCollector collection, Long id);
+    Review deleteReview(Long id);
 }

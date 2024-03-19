@@ -5,12 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import recipeapplication.application.exceptions.NotificationCollector;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import recipeapplication.application.dto.UpdateRecipeModel;
 import recipeapplication.application.dto.UploadDto;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.services.IRecipeService;
 
+import java.net.URI;
 import java.util.List;
 
 @Controller
@@ -26,17 +27,17 @@ public class RecipeController {
 
     @PostMapping("/recipe")
     public ResponseEntity<?> addRecipeToList(@RequestBody Recipe recipe) {
-        return recipeService.insertRecipe(recipe);
+        URI uri = URI.create(
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/" + recipe.id).toUriString());
+        return ResponseEntity.created(uri).body(recipeService.insertRecipe(recipe));
     }
 
     @PutMapping("/recipe")
     public ResponseEntity<?> changeRecipe(@RequestBody UpdateRecipeModel updateModel) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.updateRecipe(collection, updateModel);
-        if (collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        }
-        return result;
+        var result = recipeService.updateRecipe(updateModel);
+        return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/recipes")
@@ -46,43 +47,29 @@ public class RecipeController {
 
     @GetMapping("/recipe/{id}")
     public ResponseEntity<?> getRecipeById(@PathVariable Long id) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.getRecipeById(collection, id);
-        if (collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        }
+        var result = recipeService.getRecipeById(id);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/recipe/{id}/document")
     public ResponseEntity<?> handleFileUpload(@ModelAttribute UploadDto file) {
-        return this.recipeService.uploadImage(file);
+        return ResponseEntity.ok().body(this.recipeService.uploadImage(file));
     }
 
     @GetMapping("/recipe/{id}/pdf")
     public ResponseEntity<?> downloadPdf(@PathVariable Long id) {
-        return this.recipeService.downloadPdf(id);
+        return ResponseEntity.ok().body(this.recipeService.downloadPdf(id));
     }
 
     @GetMapping("/recipe?searchterm={searchterm}")
     public ResponseEntity<?> getRecipeByName(@PathVariable String searchterm) {
-        NotificationCollector collection = new NotificationCollector();
-        var result = recipeService.getRecipeByName(collection, searchterm);
-
-        if (collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        }
+        var result = recipeService.getRecipeByName(searchterm);
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("/recipe/{id}")
     public ResponseEntity<?> deleteRecipe(@PathVariable Long id) {
-        NotificationCollector collection = new NotificationCollector();
-
-        var result = recipeService.deleteRecipe(collection, id);
-        if (collection.HasErrors()) {
-            return ResponseEntity.badRequest().body(collection.ReturnErrors());
-        }
-        return result;
+        var result = recipeService.deleteRecipe(id);
+        return ResponseEntity.ok().body(result);
     }
 }
