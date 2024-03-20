@@ -1,8 +1,11 @@
 package recipeapplication.application.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -11,6 +14,8 @@ import recipeapplication.application.models.Review;
 import recipeapplication.application.services.IReviewService;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/api/review")
@@ -30,7 +35,13 @@ private final IReviewService reviewService;
     }
 
     @PostMapping("/review")
-    public ResponseEntity<?> addReviewToReview(@RequestBody Review review) {
+    public ResponseEntity<?> addReviewToReview(@RequestBody @Validated Review review, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = new ArrayList<>();
+            bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
+
         var result = reviewService.insertReview(review);
         URI uri = URI.create(
                 ServletUriComponentsBuilder
@@ -41,8 +52,8 @@ private final IReviewService reviewService;
     }
     
     @PutMapping("/review")
-    public ResponseEntity<?> changeReview(@RequestBody UpdateReviewModel updateModel) {
-        var result = reviewService.updateReview(updateModel);
+    public ResponseEntity<?> changeReview(@PathVariable Long id, @RequestBody Review updatedReview) {
+        var result = reviewService.updateReview(updatedReview, id);
 
         return ResponseEntity.ok().body(result);
     }

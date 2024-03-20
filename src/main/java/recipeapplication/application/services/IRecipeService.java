@@ -15,11 +15,11 @@ public interface IRecipeService {
 
     List<Recipe> getAllRecipes();
 
-    Optional<Recipe> getRecipeById(Long id);
+    Recipe getRecipeById(Long id);
 
     List<Recipe> getRecipeByName(String searchTerm);
 
-    Recipe updateRecipe(UpdateRecipeModel recipe);
+    Recipe updateRecipe(Recipe recipe, Long id);
 
     Recipe deleteRecipe(Long id);
 
