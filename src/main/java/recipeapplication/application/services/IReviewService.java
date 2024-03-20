@@ -12,7 +12,7 @@ public interface IReviewService {
 
     Review insertReview(Review review);
 
-    Review updateReview(UpdateReviewModel review);
+    Review updateReview(Review updatedReview, Long id);
 
     Review deleteReview(Long id);
 }

@@ -1,8 +1,11 @@
 package recipeapplication.application.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -12,6 +15,7 @@ import recipeapplication.application.models.Recipe;
 import recipeapplication.application.services.IRecipeService;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -26,18 +30,29 @@ public class RecipeController {
     }
 
     @PostMapping("/recipe")
-    public ResponseEntity<?> addRecipeToList(@RequestBody Recipe recipe) {
+    public ResponseEntity<?> addRecipeToList(@RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = new ArrayList<>();
+            bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
+        Recipe result = recipeService.insertRecipe(recipe);
         URI uri = URI.create(
                 ServletUriComponentsBuilder
                         .fromCurrentRequest()
-                        .path("/" + recipe.id).toUriString());
-        return ResponseEntity.created(uri).body(recipeService.insertRecipe(recipe));
+                        .path("/" + result.id).toUriString());
+        return ResponseEntity.created(uri).body(result);
     }
 
-    @PutMapping("/recipe")
-    public ResponseEntity<?> changeRecipe(@RequestBody UpdateRecipeModel updateModel) {
-        var result = recipeService.updateRecipe(updateModel);
-        return ResponseEntity.ok().body(result);
+    @PutMapping("/recipe/{id}")
+    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = new ArrayList<>();
+            bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
+
+        return ResponseEntity.ok().body(recipeService.updateRecipe(recipe, id));
     }
 
     @GetMapping("/recipes")
@@ -47,8 +62,7 @@ public class RecipeController {
 
     @GetMapping("/recipe/{id}")
     public ResponseEntity<?> getRecipeById(@PathVariable Long id) {
-        var result = recipeService.getRecipeById(id);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok().body(recipeService.getRecipeById(id));
     }
 
     @PostMapping("/recipe/{id}/document")
