@@ -1,6 +1,11 @@
 package recipeapplication.application.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
@@ -8,23 +13,13 @@ import recipeapplication.application.exceptions.EntityIsNotUniqueException;
 import recipeapplication.application.exceptions.RecordNotFoundException;
 import recipeapplication.application.exceptions.WrongLoginDetailsException;
 import recipeapplication.application.models.Role;
-import recipeapplication.application.models.Token;
-import recipeapplication.application.models.TokenType;
 import recipeapplication.application.models.User;
-import recipeapplication.application.repository.TokenRepository;
-
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
   private final recipeapplication.application.repository.UserRepository repository;
-  private final TokenRepository tokenRepository;
-  private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
   private final TokenService jwtService;
   private final AuthenticationManager authenticationManager;
   public User register(SignUpRequest request) {
@@ -38,10 +33,7 @@ public class AuthenticationService {
     if(repository.findByEmail(request.getEmail().toLowerCase()).isPresent()) {
       throw new EntityIsNotUniqueException("Er bestaat al een account met dit emailadres");
     }
-    var savedUser = repository.save(user);
-    var accessToken = jwtService.generateToken(user);
-    saveUserToken(savedUser, accessToken);
-    return savedUser;
+    return repository.save(user);
   }
 
   public AuthenticationResponse authenticate(SignInRequest request) {
@@ -58,8 +50,6 @@ public class AuthenticationService {
     var user = repository.findByEmail(request.getEmail().toLowerCase())
         .orElseThrow();
     var accessToken = jwtService.generateToken(user);
-    revokeAllUserTokens(user);
-    saveUserToken(user, accessToken);
     return AuthenticationResponse.builder()
         .accessToken(accessToken)
         .build();
@@ -69,27 +59,5 @@ public class AuthenticationService {
     User user = repository.findById(id).orElseThrow(() -> new RecordNotFoundException("Er is geen gebruiker gevonden met deze identifier: " + id));
     user.setRole(Role.ADMIN);
     repository.save(user);
-  }
-
-  private void saveUserToken(User user, String accessToken) {
-    var token = Token.builder()
-        .user(user)
-        .token(accessToken)
-        .tokenType(TokenType.BEARER)
-        .expired(false)
-        .revoked(false)
-        .build();
-    tokenRepository.save(token);
-  }
-
-  private void revokeAllUserTokens(User user) {
-    var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-    if (validUserTokens.isEmpty())
-      return;
-    validUserTokens.forEach(token -> {
-      token.setExpired(true);
-      token.setRevoked(true);
-    });
-    tokenRepository.saveAll(validUserTokens);
   }
 }
