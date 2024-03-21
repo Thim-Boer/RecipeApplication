@@ -1,10 +1,8 @@
 package recipeapplication.application.services;
 
 import java.util.List;
-import java.util.Optional;
 
-import recipeapplication.application.dto.UpdateRecipeModel;
-import recipeapplication.application.dto.UploadDto;
+import org.springframework.web.multipart.MultipartFile;
 import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 
@@ -23,11 +21,11 @@ public interface IRecipeService {
 
     Recipe deleteRecipe(Long id);
 
-    Image uploadImage(UploadDto image);
+    Image uploadImage(MultipartFile image, Long id);
 
-    Optional<Image> getImage();
+    Image getImage(Long id);
 
     byte[] downloadPdf(Long id);
 
-//    void insertcategories();
+    Image deleteImage(Long id);
 }

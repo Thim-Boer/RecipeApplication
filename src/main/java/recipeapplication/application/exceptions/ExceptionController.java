@@ -27,4 +27,12 @@ public class ExceptionController {
     public ResponseEntity<Object> handleWrongLoginDetailsException(WrongLoginDetailsException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
+    @ExceptionHandler(value = FileUploadException.class)
+    public ResponseEntity<Object> handleFileUploadException(FileUploadException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+    @ExceptionHandler(value = ValidationException.class)
+    public ResponseEntity<Object> handleValidationException(ValidationException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+    }
 }
