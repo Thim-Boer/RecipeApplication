@@ -2,15 +2,17 @@ package recipeapplication.application.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import recipeapplication.application.dto.UpdateRecipeModel;
-import recipeapplication.application.dto.UploadDto;
+import recipeapplication.application.exceptions.ValidationException;
+import recipeapplication.application.models.Image;
 import recipeapplication.application.models.Recipe;
 import recipeapplication.application.services.IRecipeService;
 
@@ -45,11 +47,11 @@ public class RecipeController {
     }
 
     @PutMapping("/recipe/{id}")
-    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
+    public ResponseEntity<Recipe> updateRecipe(@PathVariable Long id, @RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<String> errors = new ArrayList<>();
             bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
-            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            throw new ValidationException(errors);
         }
 
         return ResponseEntity.ok().body(recipeService.updateRecipe(recipe, id));
@@ -61,29 +63,36 @@ public class RecipeController {
     }
 
     @GetMapping("/recipe/{id}")
-    public ResponseEntity<?> getRecipeById(@PathVariable Long id) {
+    public ResponseEntity<Recipe> getRecipeById(@PathVariable Long id) {
         return ResponseEntity.ok().body(recipeService.getRecipeById(id));
     }
 
     @PostMapping("/recipe/{id}/document")
-    public ResponseEntity<?> handleFileUpload(@ModelAttribute UploadDto file) {
-        return ResponseEntity.ok().body(this.recipeService.uploadImage(file));
+    public ResponseEntity<Image> handleFileUpload(@RequestParam(value = "image", required = true) MultipartFile file, @PathVariable Long id) {
+        return ResponseEntity.ok().body(this.recipeService.uploadImage(file, id));
     }
 
     @GetMapping("/recipe/{id}/pdf")
-    public ResponseEntity<?> downloadPdf(@PathVariable Long id) {
-        return ResponseEntity.ok().body(this.recipeService.downloadPdf(id));
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
+        byte[] pdfBytes = this.recipeService.downloadPdf(id);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdfBytes);
     }
 
     @GetMapping("/recipe?searchterm={searchterm}")
-    public ResponseEntity<?> getRecipeByName(@PathVariable String searchterm) {
+    public ResponseEntity<List<Recipe>> getRecipeByName(@PathVariable String searchterm) {
         var result = recipeService.getRecipeByName(searchterm);
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("/recipe/{id}")
-    public ResponseEntity<?> deleteRecipe(@PathVariable Long id) {
+    public ResponseEntity<Recipe> deleteRecipe(@PathVariable Long id) {
         var result = recipeService.deleteRecipe(id);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @DeleteMapping("/recipe/{id}/image")
+    public ResponseEntity<Image> deleteImage(@PathVariable Long id) {
+        Image result = recipeService.deleteImage(id);
         return ResponseEntity.ok().body(result);
     }
 }
