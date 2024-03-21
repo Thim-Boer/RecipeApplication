@@ -69,7 +69,11 @@ public class RecipeController {
 
     @PostMapping("/recipe/{id}/document")
     public ResponseEntity<Image> handleFileUpload(@RequestParam(value = "image", required = true) MultipartFile file, @PathVariable Long id) {
-        return ResponseEntity.ok().body(this.recipeService.uploadImage(file, id));
+        URI uri = URI.create(
+                ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .replacePath("/recipe/" + id + "/image").toUriString());
+        return ResponseEntity.created(uri).body(this.recipeService.uploadImage(file, id));
     }
 
     @GetMapping("/recipe/{id}/pdf")

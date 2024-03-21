@@ -1,9 +1,11 @@
 package recipeapplication.application.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import recipeapplication.application.exceptions.*;
+import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.Review;
 import recipeapplication.application.models.Role;
 import recipeapplication.application.models.User;
@@ -14,28 +16,20 @@ import recipeapplication.application.repository.UserRepository;
 public class ReviewService implements IReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final UserRepository userRepository;
 
     @Autowired
-    ReviewService(UserRepository userRepository, ReviewRepository reviewRepository) {
+    ReviewService(ReviewRepository reviewRepository) {
         this.reviewRepository = reviewRepository;
-        this.userRepository = userRepository;
     }
 
     @Override
     public boolean checkIfUserIsAuthorized(Review review) {
-        User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var foundReview = reviewRepository.findById(review.id);
-
-        if (foundReview.isEmpty()) {
-            return false;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
+            User userDetails = (User) authentication.getPrincipal();
+            return review.userId == userDetails.getId() || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         }
-
-        var foundUser = userRepository.findById(userDetails.getId());
-        var userRole = userDetails.getRole();
-
-        return foundUser.map(user -> user.getId().equals(foundReview.get().userId) || user.getRole().equals(Role.ADMIN))
-                .orElse(false);
+        return false;
     }
 
     @Override

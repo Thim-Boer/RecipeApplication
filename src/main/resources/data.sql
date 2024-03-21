@@ -19,6 +19,11 @@ INSERT INTO category (id, name) VALUES (0, 'Voorgerecht'),
 (18, 'Seizoensgebonden gerechten'),
 (19, 'Kinderrecepten');
 
+INSERT INTO users (id, email, firstname ,lastname, password, role)
+VALUES (101, 'admin@admin.com', 'Admin', 'adminUser', '$2a$10$K6amD187nBQpt.2KiARLfuKK2METH6ny0Xz0ZraQUZTsnPUifqhOS', 'ADMIN'),
+       (102, 'user@user.com', 'User', 'normalUser', '$2a$10$HbsP9RQzjB0G9XjE.9f8ZenpihkmpUVOj5DUyyh2vvapX9Zide.kW', 'USER');
+
+
 INSERT INTO recipe (id, name, instructions, duration, difficulty, portion_size, nutritional_information, allergies, category_id, user_id, supplies, ingredients)
 VALUES (42, 'Random Recipe', 'Mix all ingredients. Then cook for 30 minutes. Leave for another 5. You are done.', 45, 3, 4,
         'Calories: 300, Protein: 15g, Fat: 10g', 'Gluten, Dairy', 5, 1, 'Mixing bowl, Pan',

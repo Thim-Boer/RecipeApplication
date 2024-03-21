@@ -5,6 +5,7 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,10 +40,11 @@ public class RecipeService implements IRecipeService {
 
     @Override
     public boolean checkIfUserIsAuthorized(Recipe recipe) {
-        User userDetails = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Optional<User> foundUser = userRepository.findById(userDetails.getId());
-
-        foundUser.map(user -> false);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
+            User userDetails = (User) authentication.getPrincipal();
+            return recipe.userId == userDetails.getId() || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        }
         return false;
     }
 

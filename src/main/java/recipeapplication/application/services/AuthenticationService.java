@@ -5,13 +5,14 @@ import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
 import recipeapplication.application.exceptions.EntityIsNotUniqueException;
+import recipeapplication.application.exceptions.RecordNotFoundException;
+import recipeapplication.application.exceptions.WrongLoginDetailsException;
 import recipeapplication.application.models.Role;
 import recipeapplication.application.models.Token;
 import recipeapplication.application.models.TokenType;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.TokenRepository;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -51,9 +52,9 @@ public class AuthenticationService {
               request.getPassword()
           )
       );
-  } catch (AuthenticationException ex) {
-      return null;
-  }
+    } catch (AuthenticationException ex) {
+      throw new WrongLoginDetailsException("Verkeerde gegevens");
+    }
     var user = repository.findByEmail(request.getEmail().toLowerCase())
         .orElseThrow();
     var accessToken = jwtService.generateToken(user);
@@ -62,6 +63,12 @@ public class AuthenticationService {
     return AuthenticationResponse.builder()
         .accessToken(accessToken)
         .build();
+  }
+
+  public void makeUserAdmin(Integer id) {
+    User user = repository.findById(id).orElseThrow(() -> new RecordNotFoundException("Er is geen gebruiker gevonden met deze identifier: " + id));
+    user.setRole(Role.ADMIN);
+    repository.save(user);
   }
 
   private void saveUserToken(User user, String accessToken) {
