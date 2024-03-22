@@ -1,8 +1,5 @@
 package recipeapplication.application.services;
 
-import org.springframework.http.ResponseEntity;
-
-import recipeapplication.application.dto.UpdateReviewModel;
 import recipeapplication.application.models.Review;
 
 public interface IReviewService {

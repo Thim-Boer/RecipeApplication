@@ -15,27 +15,22 @@ import recipeapplication.application.models.Recipe;
 import recipeapplication.application.models.User;
 import recipeapplication.application.repository.ImageRepository;
 import recipeapplication.application.repository.RecipeRepository;
-import recipeapplication.application.repository.UserRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+
 @Service
 public class RecipeService implements IRecipeService {
 
     private final RecipeRepository recipeRepository;
     private final ImageRepository imageRepository;
-    private final UserRepository userRepository;
 
     @Autowired
-    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository,
-                         UserRepository userRepository) {
+    public RecipeService(RecipeRepository recipeRepository, ImageRepository imageRepository) {
         this.recipeRepository = recipeRepository;
         this.imageRepository = imageRepository;
-        this.userRepository = userRepository;
     }
 
     @Override
@@ -43,7 +38,7 @@ public class RecipeService implements IRecipeService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
             User userDetails = (User) authentication.getPrincipal();
-            return recipe.userId == userDetails.getId() || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            return recipe.userId == userDetails.getId() || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN"));
         }
         return false;
     }
@@ -55,7 +50,7 @@ public class RecipeService implements IRecipeService {
         }
 
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        recipe.id = user.getId().longValue();
+        recipe.userId = user.getId();
         return recipeRepository.save(recipe);
     }
 
@@ -83,10 +78,10 @@ public class RecipeService implements IRecipeService {
             throw new UserIsNotAuthorizedException("Je hebt geen rechten om dit recept te updaten");
         }
 
-        if (!recipe.id.equals(id)) {
+        if (!foundRecipe.id.equals(id)) {
             throw new IdentifiersDoNotMatchException("De opgegeven identifiers komen niet overeen");
         }
-
+        recipe.id = id;
         return recipeRepository.save(recipe);
     }
 
@@ -104,6 +99,11 @@ public class RecipeService implements IRecipeService {
 
     @Override
     public Image deleteImage(Long id) {
+        Recipe foundRecipe = getRecipeById(id);
+        if (!checkIfUserIsAuthorized(foundRecipe)) {
+            throw new UserIsNotAuthorizedException("Je hebt geen rechten om deze afbeelding te verwijderen");
+        }
+
         Image image = imageRepository.findById(id).orElseThrow(() -> new RecordNotFoundException("Er bestaat geen foto met deze identifier"));
         imageRepository.delete(image);
         return image;
@@ -112,13 +112,17 @@ public class RecipeService implements IRecipeService {
     @Override
     public Image uploadImage(MultipartFile file, Long id) {
         try {
+            Recipe foundRecipe = getRecipeById(id);
+            if (!checkIfUserIsAuthorized(foundRecipe)) {
+                throw new UserIsNotAuthorizedException("Je hebt geen rechten om bij dit recept een foto te uploaden");
+            }
+
             if(imageRepository.findById(id).isPresent()){
                 throw new EntityIsNotUniqueException("Dit recept bevat al een image");
             }
             byte[] fileBytes = file.getBytes();
             String base64Image = Base64.getEncoder().encodeToString(fileBytes);
-            Recipe recipe = getRecipeById(id);
-            Image image = new Image(id, recipe, base64Image);
+            Image image = new Image(id, foundRecipe, base64Image);
             return imageRepository.save(image);
         } catch (Exception e) {
             throw new FileUploadException(e.getMessage());

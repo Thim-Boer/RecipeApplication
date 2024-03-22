@@ -32,7 +32,7 @@ public class RecipeController {
     }
 
     @PostMapping("/recipe")
-    public ResponseEntity<?> addRecipeToList(@RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
+    public ResponseEntity<?> addRecipe(@RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<String> errors = new ArrayList<>();
             bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
@@ -82,9 +82,9 @@ public class RecipeController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdfBytes);
     }
 
-    @GetMapping("/recipe?searchterm={searchterm}")
-    public ResponseEntity<List<Recipe>> getRecipeByName(@PathVariable String searchterm) {
-        var result = recipeService.getRecipeByName(searchterm);
+    @GetMapping("/recipe")
+    public ResponseEntity<List<Recipe>> getRecipeByName(@RequestParam String searchterm) {
+        List<Recipe> result = recipeService.getRecipeByName(searchterm);
         return ResponseEntity.ok().body(result);
     }
 

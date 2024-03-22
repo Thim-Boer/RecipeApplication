@@ -51,6 +51,10 @@ public class TokenService {
     return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
   }
 
+  private String extractIssuer(String token) {
+    return extractClaim(token, Claims::getIssuer);
+  }
+
   private Boolean isTokenExpired(String token) {
     return extractExpiration(token).before(new Date());
   }
@@ -67,6 +71,7 @@ public class TokenService {
     return Jwts.builder()
             .setClaims(claims)
             .setSubject(subject)
+            .setIssuer(issuerToken)
             .setIssuedAt(new Date(currentTime))
             .setExpiration(new Date(currentTime + validPeriod))
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -77,6 +82,6 @@ public class TokenService {
           userDetails) {
     final String username = extractUsername(token);
     return username.equals(userDetails.getUsername()) &&
-            !isTokenExpired(token);
+            !isTokenExpired(token) && extractIssuer(token).equals(issuerToken);
   }
 }

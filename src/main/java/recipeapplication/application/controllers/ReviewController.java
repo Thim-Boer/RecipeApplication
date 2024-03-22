@@ -7,9 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import recipeapplication.application.dto.UpdateReviewModel;
 import recipeapplication.application.models.Review;
 import recipeapplication.application.services.IReviewService;
 
@@ -51,7 +49,7 @@ private final IReviewService reviewService;
         return ResponseEntity.created(uri).body(result);
     }
     
-    @PutMapping("/review")
+    @PutMapping("/review/{id}")
     public ResponseEntity<?> changeReview(@PathVariable Long id, @RequestBody Review updatedReview) {
         var result = reviewService.updateReview(updatedReview, id);
 

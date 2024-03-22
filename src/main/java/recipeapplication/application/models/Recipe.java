@@ -37,6 +37,7 @@ public class Recipe {
     public String allergies;
 
     @Min(value = 0, message = "Categorie-ID moet groter zijn dan -1")
+    @Max(value = 19, message = "Categorie-ID mag niet groter zijn dan 19")
     public int categoryId;
 
     public int userId;
