@@ -12,16 +12,20 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LogoutService implements LogoutHandler {
 
-    @Override
+  @Override
   public void logout(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      Authentication authentication
+          HttpServletRequest request,
+          HttpServletResponse response,
+          Authentication authentication
   ) {
     final String authHeader = request.getHeader("Authorization");
-    final String jwt;
-    if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
+      if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       return;
+    }
+
+    if (authentication != null) {
+      authentication.setAuthenticated(false);
+      authentication.getAuthorities().clear();
     }
 
     SecurityContextHolder.clearContext();

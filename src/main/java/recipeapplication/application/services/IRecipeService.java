@@ -23,8 +23,6 @@ public interface IRecipeService {
 
     Image uploadImage(MultipartFile image, Long id);
 
-    Image getImage(Long id);
-
     byte[] downloadPdf(Long id);
 
     Image deleteImage(Long id);

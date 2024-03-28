@@ -7,6 +7,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import recipeapplication.application.dto.AuthenticationResponse;
 import recipeapplication.application.dto.SignInRequest;
 import recipeapplication.application.dto.SignUpRequest;
+import recipeapplication.application.models.User;
 import recipeapplication.application.services.AuthenticationService;
 
 import java.net.URI;
@@ -19,7 +20,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
+    public ResponseEntity<User> signup(@RequestBody SignUpRequest request) {
         var result= authenticationService.register(request);
         URI uri = URI.create(
                 ServletUriComponentsBuilder
@@ -34,7 +35,7 @@ public class AuthenticationController {
     }
 
     @PutMapping("/{userId}/admin")
-    public ResponseEntity<?> makeUserAdmin(@PathVariable Integer userId) {
+    public ResponseEntity<String> makeUserAdmin(@PathVariable Integer userId) {
         authenticationService.makeUserAdmin(userId);
         return ResponseEntity.ok().body("Gebruiker: " + userId + " is admin gemaakt");
     }

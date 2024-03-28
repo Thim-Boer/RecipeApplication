@@ -32,11 +32,11 @@ public class RecipeController {
     }
 
     @PostMapping("/recipe")
-    public ResponseEntity<?> addRecipe(@RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
+    public ResponseEntity<Recipe> addRecipe(@RequestBody @Validated Recipe recipe, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<String> errors = new ArrayList<>();
             bindingResult.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
-            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            throw new ValidationException(errors);
         }
         Recipe result = recipeService.insertRecipe(recipe);
         URI uri = URI.create(
@@ -68,7 +68,7 @@ public class RecipeController {
     }
 
     @PostMapping("/recipe/{id}/document")
-    public ResponseEntity<Image> handleFileUpload(@RequestParam(value = "image", required = true) MultipartFile file, @PathVariable Long id) {
+    public ResponseEntity<Image> handleFileUpload(@RequestParam(value = "image") MultipartFile file, @PathVariable Long id) {
         URI uri = URI.create(
                 ServletUriComponentsBuilder
                         .fromCurrentRequest()

@@ -5,7 +5,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import recipeapplication.application.exceptions.EntityIsNotUniqueException;
-import recipeapplication.application.exceptions.IdentifiersDoNotMatchException;
 import recipeapplication.application.exceptions.RecordNotFoundException;
 import recipeapplication.application.exceptions.UserIsNotAuthorizedException;
 import recipeapplication.application.models.Review;
@@ -51,11 +50,6 @@ public class ReviewService implements IReviewService {
             throw new UserIsNotAuthorizedException("Je hebt geen rechten om deze review aan te passen");
         }
 
-        if (!foundReview.id.equals(id)) {
-            throw new IdentifiersDoNotMatchException("De identifiers komen niet overeen");
-        }
-
-        review.id = id;
         review.userId = foundReview.userId;
 
         return reviewRepository.save(review);
