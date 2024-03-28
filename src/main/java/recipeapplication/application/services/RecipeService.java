@@ -78,9 +78,6 @@ public class RecipeService implements IRecipeService {
             throw new UserIsNotAuthorizedException("Je hebt geen rechten om dit recept te updaten");
         }
 
-        if (!foundRecipe.id.equals(id)) {
-            throw new IdentifiersDoNotMatchException("De opgegeven identifiers komen niet overeen");
-        }
         recipe.id = id;
         return recipeRepository.save(recipe);
     }
@@ -111,26 +108,27 @@ public class RecipeService implements IRecipeService {
 
     @Override
     public Image uploadImage(MultipartFile file, Long id) {
-        try {
             Recipe foundRecipe = getRecipeById(id);
             if (!checkIfUserIsAuthorized(foundRecipe)) {
                 throw new UserIsNotAuthorizedException("Je hebt geen rechten om bij dit recept een foto te uploaden");
             }
 
             if(imageRepository.findById(id).isPresent()){
-                throw new EntityIsNotUniqueException("Dit recept bevat al een image");
+                throw new EntityIsNotUniqueException("Dit recept bevat al een afbeelding");
             }
-            byte[] fileBytes = file.getBytes();
-            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
-            Image image = new Image(id, foundRecipe, base64Image);
-            return imageRepository.save(image);
-        } catch (Exception e) {
-            throw new FileUploadException(e.getMessage());
-        }
+            try {
+                byte[] fileBytes = file.getBytes();
+                String base64Image = Base64.getEncoder().encodeToString(fileBytes);
+                Image image = new Image(id, foundRecipe, base64Image);
+                imageRepository.save(image);
+                return image;
+            }
+            catch (Exception e) {
+                throw new FileUploadException(e.getMessage());
+            }
     }
 
-    @Override
-    public Image getImage(Long id) {
+    private Image getImage(Long id) {
         return imageRepository.findById(id).orElseThrow(() -> new RecordNotFoundException("De afbeelding met de identifier: " + id + " is niet gevonden"));
     }
 
@@ -155,7 +153,7 @@ public class RecipeService implements IRecipeService {
             document.open();
             Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
 
-            PdfPTable table = new PdfPTable(1); // Use 1 column for text-only case
+            PdfPTable table = new PdfPTable(1);
             createPdfTextContent(recipe, table, font);
 
             document.add(table);
@@ -210,7 +208,7 @@ public class RecipeService implements IRecipeService {
                 .append("Difficulty: ").append(recipe.difficulty).append("\n\n");
 
         contentBuilder.append("Ingredients:\n\n");
-        String[] ingredients = recipe.ingredients.split("\\,");
+        String[] ingredients = recipe.ingredients.split(",");
         for (String ingredient : ingredients) {
             contentBuilder.append("* ").append(ingredient.trim()).append("\n");
         }

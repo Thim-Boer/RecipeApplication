@@ -31,7 +31,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/auth/register", "/api/auth/signin", "/api/recipes/searchRecipeByName/{searchterm}")
+                                .requestMatchers("/api/auth/register", "/api/auth/signin", "/api/recipes/recipe", "/api/recipes/recipe/{id}", "/api/recipes/recipes")
                                 .permitAll()
                                 .requestMatchers(HttpMethod.PUT, "/api/auth/{userId}/admin").hasAnyAuthority("ADMIN")
                                 .anyRequest().authenticated()
